@@ -33,7 +33,7 @@ export class WatermarkPlatformResolver {
       return 'xhs';
     }
 
-    throw new BadRequestException('暂时只支持小红书和抖音链接');
+    throw new BadRequestException('暂时只支持红薯和抖音链接');
   }
 
   getParser(source: WatermarkSource) {

@@ -7,16 +7,47 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum GenerateType {
+  title
+  copywriting
+}
+
+enum GenerateStatus {
+  success
+  failed
+}
+
 model User {
-  id          BigInt   @id @default(autoincrement())
-  openid      String   @unique
+  id          BigInt    @id @default(autoincrement())
+  openid      String    @unique
   unionid     String?
   nickname    String?
-  avatarUrl   String?  @map("avatar_url")
-  status      Int      @default(1)
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  avatarUrl   String?   @map("avatar_url")
+  status      Int       @default(1)
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
   lastLoginAt DateTime? @map("last_login_at")
 
   @@map("users")
+}
+
+model GenerateRecord {
+  id            BigInt         @id @default(autoincrement())
+  userId        BigInt?        @map("user_id")
+  type          GenerateType
+  topic         String
+  input         Json
+  output        Json?
+  title         String?
+  summary       String?
+  status        GenerateStatus @default(success)
+  aiProvider    String?        @map("ai_provider")
+  aiModel       String?        @map("ai_model")
+  promptVersion String?        @map("prompt_version")
+  errorMessage  String?        @map("error_message")
+  createdAt     DateTime       @default(now()) @map("created_at")
+  updatedAt     DateTime       @updatedAt @map("updated_at")
+
+  @@index([userId, type, createdAt])
+  @@map("generate_records")
 }

@@ -21,7 +21,7 @@ async function bootstrap() {
 
   const swaggerConfig = new DocumentBuilder()
     .setTitle('红薯百宝箱 API')
-    .setDescription('小红书去水印、标题生成、文案生成后端接口')
+    .setDescription('红薯去水印、标题生成、文案生成后端接口')
     .setVersion('1.0')
     .addBearerAuth()
     .build();

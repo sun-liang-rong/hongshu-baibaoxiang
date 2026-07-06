@@ -9,7 +9,7 @@ export class WatermarkController {
   constructor(private readonly watermarkService: WatermarkService) {}
 
   @Post('parse')
-  @ApiOperation({ summary: '解析小红书无水印素材' })
+  @ApiOperation({ summary: '解析红薯无水印素材' })
   parse(@Body() dto: ParseWatermarkDto) {
     return this.watermarkService.parse(dto);
   }

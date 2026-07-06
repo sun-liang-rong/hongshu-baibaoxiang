@@ -1,6 +1,7 @@
 import { XhsImageResult } from '../../integrations/xhs-parser/xhs-parser.types';
 
 export interface WatermarkParseResponse {
+  id: string;
   source: string;
   sourceUrl: string;
   finalUrl: string;
@@ -13,4 +14,5 @@ export interface WatermarkParseResponse {
   videoUrl: string;
   musicUrl?: string;
   status: 'success';
+  createdAt: string;
 }

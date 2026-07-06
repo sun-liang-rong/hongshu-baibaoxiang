@@ -9,8 +9,8 @@ import {
 
 export class ParseWatermarkDto {
   @ApiProperty({
-    description: '小红书分享文本或链接',
-    example: '有点好玩呀 http://xhslink.com/o/7RVbLuOxlIq 去小红书看看',
+    description: '红薯分享文本或链接',
+    example: '有点好玩呀 http://xhslink.com/o/7RVbLuOxlIq 去红薯看看',
   })
   @IsString()
   @MinLength(1)

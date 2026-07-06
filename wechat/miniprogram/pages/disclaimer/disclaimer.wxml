@@ -1,0 +1,12 @@
+<navigation-bar title="免责声明" color="#1f1f1f" background="#ffffff"></navigation-bar>
+<scroll-view class="page-scroll" scroll-y type="list">
+  <view class="doc-page">
+    <view class="doc-card">
+      <view class="doc-title">合规使用说明</view>
+      <view wx:for="{{items}}" wx:key="*this" class="notice-row">
+        <view class="notice-dot"></view>
+        <view class="notice-text">{{item}}</view>
+      </view>
+    </view>
+  </view>
+</scroll-view>

@@ -1,4 +1,4 @@
-export type XhsMediaSource = 'traceId' | 'fileId';
+export type XhsMediaSource = 'url' | 'traceId' | 'fileId';
 
 export interface XhsImageResult {
   index: number;
@@ -22,6 +22,7 @@ export interface XhsFullParseResult extends XhsParseResult {
 }
 
 export interface XhsImageLike {
+  url?: string;
   traceId?: string;
   fileId?: string;
   livePhoto?: {

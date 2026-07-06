@@ -12,6 +12,7 @@ export const envValidationSchema = Joi.object({
   WECHAT_APP_SECRET: Joi.string().allow('').default(''),
   XHS_PARSER_BASE_URL: Joi.string().uri().allow('').default(''),
   XHS_PARSER_API_KEY: Joi.string().allow('').default(''),
+  AI_PROVIDER: Joi.string().allow('').default('starapi'),
   AI_BASE_URL: Joi.string().uri().allow('').default(''),
   AI_API_KEY: Joi.string().allow('').default(''),
   AI_MODEL: Joi.string().allow('').default(''),

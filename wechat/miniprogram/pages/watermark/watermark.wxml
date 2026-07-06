@@ -1,0 +1,40 @@
+<navigation-bar title="红薯宝箱" back="{{false}}" color="#1f1f1f" background="#ffffff"></navigation-bar>
+<scroll-view class="page-scroll" scroll-y type="list">
+  <view class="page-block">
+    <view class="creator-card">
+      <view class="creator-card__top">
+        <view class="brand-mark">红</view>
+        <view>
+          <view class="page-kicker">创作工具箱</view>
+          <view class="page-title">去水印</view>
+        </view>
+      </view>
+      <view class="page-subtitle">粘贴小红薯或痘音分享链接，提取干净素材和原文案。</view>
+      <view class="support-row">
+        <text>小红薯</text>
+        <text>痘音</text>
+        <text>素材备份</text>
+      </view>
+    </view>
+
+    <view class="input-panel">
+      <view class="panel-title">粘贴分享内容</view>
+      <textarea
+        class="textarea"
+        value="{{text}}"
+        maxlength="1200"
+        placeholder="请粘贴分享链接"
+        bindinput="onInput"
+      />
+      <view class="input-actions">
+        <button class="button button--ghost" bindtap="paste">粘贴</button>
+        <button class="button button--primary" loading="{{loading}}" bindtap="submit">开始解析</button>
+      </view>
+    </view>
+
+    <view class="notice">
+      工具仅供个人学习、资料整理和内容备份使用，请尊重原创作者版权。
+      <text class="notice__link" bindtap="goDisclaimer">查看免责声明</text>
+    </view>
+  </view>
+</scroll-view>

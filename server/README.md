@@ -116,7 +116,7 @@ npm run test:e2e
 
 1. 微信登录 `AuthModule`
 2. 用户资料 `UsersModule`
-3. 小红书去水印 `WatermarkModule`
+3. 红薯去水印 `WatermarkModule`
 4. 标题和文案生成 `GenerateModule`
 5. 历史记录 `HistoryModule`
 6. 收藏 `FavoriteModule`

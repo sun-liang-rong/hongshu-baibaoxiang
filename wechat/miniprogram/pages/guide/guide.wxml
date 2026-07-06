@@ -1,0 +1,12 @@
+<navigation-bar title="使用说明" color="#1f1f1f" background="#ffffff"></navigation-bar>
+<scroll-view class="page-scroll" scroll-y type="list">
+  <view class="doc-page">
+    <view wx:for="{{sections}}" wx:key="title" class="doc-card">
+      <view class="doc-card__title">{{item.title}}</view>
+      <view wx:for="{{item.steps}}" wx:key="*this" wx:for-item="step" class="step-row">
+        <view class="step-dot">{{index + 1}}</view>
+        <view class="step-text">{{step}}</view>
+      </view>
+    </view>
+  </view>
+</scroll-view>

@@ -44,6 +44,14 @@ describe('xhs-parser utils', () => {
   it('builds no-watermark image urls from traceId or fileId', () => {
     expect(
       buildNoWatermarkImageUrl({
+        url: 'https://sns-img-bd.xhscdn.com/demo',
+        traceId: 'trace-001',
+        fileId: 'spectrum/file-001',
+      }),
+    ).toBe('https://sns-img-bd.xhscdn.com/demo');
+
+    expect(
+      buildNoWatermarkImageUrl({
         traceId: 'trace-001',
         fileId: 'spectrum/file-001',
       }),
@@ -75,6 +83,7 @@ describe('xhs-parser utils', () => {
               type: 'video',
               imageList: [
                 {
+                  urlDefault: 'https://sns-img-bd.xhscdn.com/image-real',
                   traceId: 'image-trace-1',
                   livePhoto: {
                     media: {
@@ -105,8 +114,8 @@ describe('xhs-parser utils', () => {
       images: [
         {
           index: 1,
-          url: 'https://ci.xiaohongshu.com/image-trace-1?imageView2/2/format/png',
-          source: 'traceId',
+          url: 'https://sns-img-bd.xhscdn.com/image-real',
+          source: 'url',
           livePhotoVideoUrl: 'https://example.com/live.mp4',
         },
       ],

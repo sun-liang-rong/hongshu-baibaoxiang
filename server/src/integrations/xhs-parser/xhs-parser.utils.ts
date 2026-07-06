@@ -7,6 +7,7 @@ import {
 
 const IMAGE_HOST = 'https://ci.xiaohongshu.com';
 const IMAGE_QUERY = 'imageView2/2/format/png';
+const IMAGE_URL_KEYS = ['urlDefault', 'urlSizeLarge', 'urlPre', 'url'] as const;
 
 interface XhsNoteLike {
   title?: string;
@@ -22,12 +23,12 @@ interface XhsNoteLike {
 
 export function extractNoteUrl(input: string) {
   if (!input || typeof input !== 'string') {
-    throw new Error('请输入小红书分享链接或包含链接的分享文本');
+    throw new Error('请输入红薯分享链接或包含链接的分享文本');
   }
 
   const match = input.match(/https?:\/\/[^\s，。；、)）\]"']+/i);
   if (!match) {
-    throw new Error('未找到有效链接，请复制完整的小红书分享内容');
+    throw new Error('未找到有效链接，请复制完整的红薯分享内容');
   }
 
   return match[0];
@@ -43,7 +44,7 @@ export function assertXhsUrl(url: string) {
   ]);
 
   if (!allowedHosts.has(hostname)) {
-    throw new Error('暂时只支持小红书链接');
+    throw new Error('暂时只支持红薯链接');
   }
 }
 
@@ -117,7 +118,7 @@ export function parseNoteFromInitialState(state: unknown): XhsParseResult {
       return {
         index: index + 1,
         url,
-        source: image.traceId ? 'traceId' : 'fileId',
+        source: image.url ? 'url' : image.traceId ? 'traceId' : 'fileId',
         ...(livePhotoVideoUrl ? { livePhotoVideoUrl } : {}),
       };
     })
@@ -133,6 +134,10 @@ export function parseNoteFromInitialState(state: unknown): XhsParseResult {
 }
 
 export function buildNoWatermarkImageUrl(image: XhsImageLike) {
+  if (image?.url) {
+    return image.url;
+  }
+
   const imageId = image?.traceId || getFileIdTail(image?.fileId);
   if (!imageId) {
     return '';
@@ -212,12 +217,41 @@ function toXhsImageLike(value: unknown): XhsImageLike | null {
   );
 
   return {
+    url: getImageUrl(image),
     traceId: getString(image, 'traceId'),
     fileId: getString(image, 'fileId'),
     ...(livePhotoStream
       ? { livePhoto: { media: { stream: livePhotoStream } } }
       : {}),
   };
+}
+
+function getImageUrl(image: Record<string, unknown>) {
+  for (const key of IMAGE_URL_KEYS) {
+    const url = getCleanUrl(image[key]);
+    if (url) {
+      return url;
+    }
+  }
+
+  const infoList = Array.isArray(image.infoList) ? image.infoList : [];
+  for (const item of infoList) {
+    const url = getCleanUrl(asRecord(item)?.url);
+    if (url) {
+      return url;
+    }
+  }
+
+  return '';
+}
+
+function getCleanUrl(value: unknown) {
+  if (typeof value !== 'string') {
+    return '';
+  }
+
+  const url = value.trim();
+  return /^https?:\/\//i.test(url) ? url : '';
 }
 
 function asXhsStreamMap(value: unknown): XhsStreamMap | undefined {

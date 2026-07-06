@@ -1,0 +1,61 @@
+{
+  "pages": [
+    "pages/watermark/watermark",
+    "pages/title-generate/title-generate",
+    "pages/copywriting-generate/copywriting-generate",
+    "pages/profile/profile",
+    "pages/watermark-result/watermark-result",
+    "pages/history/history",
+    "pages/favorites/favorites",
+    "pages/guide/guide",
+    "pages/disclaimer/disclaimer"
+  ],
+  "window": {
+    "navigationBarTextStyle": "black",
+    "navigationStyle": "custom"
+  },
+  "tabBar": {
+    "color": "#999999",
+    "selectedColor": "#ff2442",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "white",
+    "list": [
+      {
+        "pagePath": "pages/watermark/watermark",
+        "text": "水印",
+        "iconPath": "assets/tabbar/watermark.png",
+        "selectedIconPath": "assets/tabbar/watermark-active.png"
+      },
+      {
+        "pagePath": "pages/title-generate/title-generate",
+        "text": "标题",
+        "iconPath": "assets/tabbar/title.png",
+        "selectedIconPath": "assets/tabbar/title-active.png"
+      },
+      {
+        "pagePath": "pages/copywriting-generate/copywriting-generate",
+        "text": "文案",
+        "iconPath": "assets/tabbar/copywriting.png",
+        "selectedIconPath": "assets/tabbar/copywriting-active.png"
+      },
+      {
+        "pagePath": "pages/profile/profile",
+        "text": "我的",
+        "iconPath": "assets/tabbar/profile.png",
+        "selectedIconPath": "assets/tabbar/profile-active.png"
+      }
+    ]
+  },
+  "style": "v2",
+  "rendererOptions": {
+    "skyline": {
+      "defaultDisplayBlock": true,
+      "disableABTest": true,
+      "sdkVersionBegin": "3.0.0",
+      "sdkVersionEnd": "15.255.255"
+    }
+  },
+  "componentFramework": "glass-easel",
+  "sitemapLocation": "sitemap.json",
+  "lazyCodeLoading": "requiredComponents"
+}

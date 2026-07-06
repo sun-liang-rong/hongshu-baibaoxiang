@@ -1,0 +1,41 @@
+<navigation-bar title="我的" back="{{false}}" color="#1f1f1f" background="#ffffff"></navigation-bar>
+<scroll-view class="page-scroll" scroll-y type="list">
+  <view class="profile">
+    <view class="user-card">
+      <view class="avatar">{{avatarText}}</view>
+      <view class="user-card__main">
+        <view class="nickname">{{nickname}}</view>
+        <view class="subtext">免费工具 MVP 版本</view>
+      </view>
+    </view>
+
+    <view class="stat-row">
+      <view class="stat-item">
+        <view class="stat-item__num">3</view>
+        <view class="stat-item__label">创作工具</view>
+      </view>
+      <view class="stat-item">
+        <view class="stat-item__num">0</view>
+        <view class="stat-item__label">次数限制</view>
+      </view>
+      <view class="stat-item">
+        <view class="stat-item__num">0</view>
+        <view class="stat-item__label">广告干扰</view>
+      </view>
+    </view>
+
+    <view class="link-list">
+      <view wx:for="{{links}}" wx:key="title" class="link-item" bindtap="go" data-url="{{item.url}}">
+        <view>
+          <view class="link-item__title">{{item.title}}</view>
+          <view class="link-item__desc">{{item.desc}}</view>
+        </view>
+        <view class="link-item__arrow">›</view>
+      </view>
+    </view>
+
+    <view class="about-box">
+      红薯百宝箱一期专注去水印、标题生成和文案生成，不包含会员、充值、广告奖励和次数限制。
+    </view>
+  </view>
+</scroll-view>

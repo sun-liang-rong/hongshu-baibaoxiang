@@ -50,6 +50,8 @@ describe('WatermarkService', () => {
       'http://xhslink.com/o/demo',
     );
     expect('recordId' in result).toBe(false);
+    expect(result.id).toBe('xhs_demo');
+    expect(result.createdAt).toEqual(expect.any(String));
     expect(result.images).toHaveLength(1);
   });
 

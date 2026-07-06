@@ -1,0 +1,2 @@
+<view class="status-pill">{{text}}</view>
+
