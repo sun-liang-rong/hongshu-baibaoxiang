@@ -1,6 +1,6 @@
 import { check, toggle } from '../../services/favorites';
 import { WatermarkResult } from '../../types/domain';
-import { getStorage, setStorage } from '../../utils/storage';
+import { getStorage } from '../../utils/storage';
 import { copyText, showToast } from '../../utils/ui';
 
 interface ResultData {
@@ -29,6 +29,18 @@ Component({
       }
       copyText(this.data.result.content, '文案已复制');
     },
+    previewImage(e: WechatMiniprogram.TouchEvent) {
+      const url = e.currentTarget.dataset.url as string;
+      const images = this.data.result?.images || [];
+      if (!url || images.length === 0) {
+        return;
+      }
+
+      wx.previewImage({
+        current: url,
+        urls: images,
+      });
+    },
     saveImage(e: WechatMiniprogram.TouchEvent) {
       const url = e.currentTarget.dataset.url as string;
       wx.showLoading({ title: '保存中', mask: true });
@@ -44,6 +56,20 @@ Component({
         fail: () => showToast('图片下载失败'),
         complete: () => wx.hideLoading(),
       });
+    },
+    openVideoFullscreen() {
+      const result = this.data.result;
+      if (!result || !result.videoUrl) {
+        showToast('暂无视频可播放');
+        return;
+      }
+
+      try {
+        const videoContext = wx.createVideoContext('watermarkVideo', this);
+        videoContext.requestFullScreen({ direction: 90 });
+      } catch {
+        showToast('无法进入全屏，请稍后重试');
+      }
     },
     saveVideo() {
       const result = this.data.result;
@@ -81,22 +107,6 @@ Component({
       });
       this.setData({ favorited: status.favorited });
       showToast(status.favorited ? '已收藏' : '已取消收藏', 'success');
-    },
-    generateTitle() {
-      const result = this.data.result;
-      if (!result) {
-        return;
-      }
-      setStorage('hshu_title_seed', result.title);
-      wx.switchTab({ url: '/pages/title-generate/title-generate' });
-    },
-    generateCopywriting() {
-      const result = this.data.result;
-      if (!result) {
-        return;
-      }
-      setStorage('hshu_copy_seed', result.title);
-      wx.switchTab({ url: '/pages/copywriting-generate/copywriting-generate' });
     },
   },
 });

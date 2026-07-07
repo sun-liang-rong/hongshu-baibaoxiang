@@ -1,25 +1,31 @@
 <navigation-bar title="解析结果" color="#1f1f1f" background="#ffffff"></navigation-bar>
-<scroll-view class="page-scroll" scroll-y type="list">
+<view class="page-scroll">
   <block wx:if="{{result}}">
     <view class="result-page">
-      <view class="hero-card">
-        <image class="cover" src="{{result.coverUrl}}" mode="aspectFill"></image>
-        <view class="hero-card__body">
-          <status-pill text="解析成功"></status-pill>
-          <view class="title">{{result.title}}</view>
-          <view class="meta">素材类型：{{result.type === 'video' ? '视频' : '图片'}}</view>
-        </view>
-      </view>
-
-      <view class="section">
+      <view class="section section--first">
         <view class="section__title">无水印素材</view>
-        <view class="media-grid">
+        <block wx:if="{{result.videoUrl}}">
+          <view class="video-card">
+            <video
+              id="watermarkVideo"
+              class="media-video"
+              src="{{result.videoUrl}}"
+              poster="{{result.coverUrl}}"
+              controls
+              show-center-play-btn
+              show-fullscreen-btn="{{false}}"
+              object-fit="contain"
+            ></video>
+            <button class="video-fullscreen" bindtap="openVideoFullscreen">全屏播放</button>
+          </view>
+          <button class="button button--ghost" bindtap="saveVideo">保存视频</button>
+        </block>
+        <view wx:else class="media-grid">
           <view wx:for="{{result.images}}" wx:key="*this" class="media-item">
-            <image class="media-image" src="{{item}}" mode="aspectFill"></image>
+            <image class="media-image" src="{{item}}" mode="aspectFill" bindtap="previewImage" data-url="{{item}}"></image>
             <button class="small-button" bindtap="saveImage" data-url="{{item}}">保存图片</button>
           </view>
         </view>
-        <button wx:if="{{result.videoUrl}}" class="button button--ghost" bindtap="saveVideo">保存视频</button>
       </view>
 
       <view class="section">
@@ -27,13 +33,7 @@
         <view class="content-box">{{result.content}}</view>
         <button class="button button--primary" bindtap="copyContent">复制文案</button>
       </view>
-
-      <view class="action-grid">
-        <button class="button button--ghost" bindtap="toggleFavorite">{{favorited ? '取消收藏' : '收藏结果'}}</button>
-        <button class="button button--ghost" bindtap="generateTitle">生成同款标题</button>
-        <button class="button button--ghost action-grid__wide" bindtap="generateCopywriting">生成同款文案</button>
-      </view>
     </view>
   </block>
   <empty-state wx:else title="暂无解析结果" desc="请先粘贴红薯链接并完成解析"></empty-state>
-</scroll-view>
+</view>

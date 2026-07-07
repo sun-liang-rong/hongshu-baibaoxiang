@@ -1,11 +1,12 @@
 .status-pill {
   display: inline-flex;
   align-items: center;
-  min-height: 44rpx;
+  min-height: 46rpx;
   padding: 0 18rpx;
   border-radius: 999rpx;
   background: #fff1f3;
   color: #ff2442;
   font-size: 24rpx;
-  font-weight: 800;
+  font-weight: 900;
+  box-shadow: inset 0 0 0 1rpx #ffd9df;
 }
