@@ -1,14 +1,22 @@
-<navigation-bar title="文案生成" back="{{false}}" color="#1f1f1f" background="#ffffff"></navigation-bar>
+<navigation-bar title="文案生成" back="{{false}}" color="#25232a" background="transparent"></navigation-bar>
 <scroll-view class="page-scroll" scroll-y type="list">
   <view class="page-wrap">
     <view class="page-head">
       <view class="page-kicker">笔记文案</view>
-      <view class="page-title">生成完整种草文案</view>
-      <view class="page-subtitle">围绕主题、卖点和人群，生成标题、正文、话题和配图建议。</view>
+      <view class="page-title">生成更自然的种草笔记</view>
+      <view class="page-subtitle">围绕主题、卖点和人群，组织标题、正文、话题和配图建议。</view>
     </view>
     <view class="form-card">
+      <view class="form-head">
+        <view>
+          <view class="panel-title">创作配置</view>
+          <view class="panel-subtitle">把产品信息拆成几个轻量模块，生成时更稳定。</view>
+        </view>
+        <view class="panel-badge">Note</view>
+      </view>
       <view class="field">
         <view class="field__label">文案主题</view>
+        <view class="field__hint">一句话说明这篇笔记想讲什么。</view>
         <input class="input" value="{{topic}}" placeholder="例如：夏季通勤穿搭" data-field="topic" bindinput="onInput" />
       </view>
       <view class="field">
@@ -26,14 +34,20 @@
       <view class="picker-grid">
         <picker mode="selector" range="{{styles}}" value="{{styleIndex}}" bindchange="onStyleChange">
           <view class="picker-box">
-            <text>文案风格</text>
-            <text>{{styles[styleIndex]}}</text>
+            <view>
+              <text class="picker-box__label">文案风格</text>
+              <text class="picker-box__value">{{styles[styleIndex]}}</text>
+            </view>
+            <text class="picker-box__chevron">⌄</text>
           </view>
         </picker>
         <picker mode="selector" range="{{lengths}}" value="{{lengthIndex}}" bindchange="onLengthChange">
           <view class="picker-box">
-            <text>文案长度</text>
-            <text>{{lengths[lengthIndex]}}</text>
+            <view>
+              <text class="picker-box__label">文案长度</text>
+              <text class="picker-box__value">{{lengths[lengthIndex]}}</text>
+            </view>
+            <text class="picker-box__chevron">⌄</text>
           </view>
         </picker>
       </view>
@@ -41,11 +55,16 @@
         <text>生成话题标签</text>
         <switch checked="{{includeTags}}" color="#ff2442" bindchange="onIncludeTagsChange" />
       </view>
-      <button class="button button--primary" loading="{{loading}}" bindtap="generate">生成文案</button>
+      <button class="button button--primary cta-button" loading="{{loading}}" bindtap="generate">生成文案</button>
     </view>
 
     <view class="result-section">
-      <view class="section-title">生成结果</view>
+      <view class="result-head">
+        <view>
+          <view class="section-title">文案工作区</view>
+          <view class="section-subtitle">生成后可以复制全文，也可以收藏留作素材库。</view>
+        </view>
+      </view>
       <block wx:if="{{result}}">
         <view class="result-title">{{result.title}}</view>
         <view class="content-box">{{result.body}}</view>
@@ -58,7 +77,9 @@
         </view>
         <view class="action-grid">
           <button class="button button--primary" bindtap="copyAll">复制全文</button>
-          <button class="button button--ghost" bindtap="favorite">收藏</button>
+          <button class="button button--ghost {{favorited ? 'button--favorited' : ''}}" bindtap="favorite">
+            {{favorited ? '已收藏' : '收藏'}}
+          </button>
           <button class="button button--ghost action-grid__wide" loading="{{loading}}" bindtap="generate">重新生成</button>
         </view>
       </block>

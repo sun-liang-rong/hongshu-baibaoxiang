@@ -1,32 +1,31 @@
-<navigation-bar title="我的收藏" color="#1f1f1f" background="#ffffff"></navigation-bar>
+<navigation-bar title="我的收藏" color="#25232a" background="transparent"></navigation-bar>
 <view class="page">
-  <view class="filter-row">
-    <view
-      wx:for="{{filters}}"
-      wx:key="label"
-      class="filter {{activeType === item.value ? 'filter--active' : ''}}"
-      bindtap="switchType"
-      data-type="{{item.value}}"
-    >
-      {{item.label}}
-    </view>
-  </view>
+  <filter-tabs filters="{{filters}}" active="{{activeType}}" bind:change="switchType"></filter-tabs>
 
-  <scroll-view class="list-scroll" scroll-y type="list">
+  <scroll-view
+    class="list-scroll"
+    scroll-y
+    type="list"
+    lower-threshold="120"
+    bindscrolltolower="loadMore"
+  >
     <block wx:if="{{items.length}}">
-      <view wx:for="{{items}}" wx:key="id" class="record-card">
-        <view class="record-card__head">
-          <status-pill text="{{item.label}}"></status-pill>
-          <text class="record-card__time">{{item.time}}</text>
-        </view>
-        <view class="record-card__title" bindtap="open" data-id="{{item.id}}">{{item.title}}</view>
-        <view class="record-card__summary">{{item.summary}}</view>
-        <view class="record-card__actions">
-          <button bindtap="open" data-id="{{item.id}}">查看</button>
-          <button bindtap="copy" data-id="{{item.id}}">复制</button>
-          <button bindtap="remove" data-id="{{item.id}}">删除</button>
-        </view>
-      </view>
+      <record-card
+        wx:for="{{items}}"
+        wx:key="id"
+        item="{{item}}"
+        bind:open="open"
+        bind:copy="copy"
+        bind:remove="remove"
+      ></record-card>
+      <button
+        wx:if="{{hasMore}}"
+        class="load-more-button"
+        loading="{{loadingMore}}"
+        bindtap="loadMore"
+      >
+        加载更多
+      </button>
     </block>
     <empty-state wx:else title="暂无收藏" desc="在解析结果、标题和文案页面点击收藏后会出现在这里"></empty-state>
   </scroll-view>

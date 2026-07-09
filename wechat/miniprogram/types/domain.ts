@@ -6,6 +6,24 @@ export interface ApiResponse<T> {
   data: T;
 }
 
+export interface GenerateQuota {
+  used: number;
+  limit: number;
+  remaining: number;
+}
+
+export interface GenerateQuotaResult {
+  watermark: GenerateQuota;
+  title: GenerateQuota;
+  copywriting: GenerateQuota;
+}
+
+export interface PaginatedResult<T> {
+  items: T[];
+  nextCursor: string;
+  pageSize: number;
+}
+
 export interface UserProfile {
   id: string;
   nickname: string;
@@ -27,6 +45,7 @@ export interface WatermarkResult {
   musicUrl: string;
   status: "success";
   createdAt: string;
+  quota?: GenerateQuota;
 }
 
 export interface CopywritingResult {

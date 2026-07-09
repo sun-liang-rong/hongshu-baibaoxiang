@@ -1,4 +1,7 @@
-import { GenerateTitlesDto } from '../dto/generate-titles.dto';
+import {
+  DEFAULT_TITLE_COUNT,
+  GenerateTitlesDto,
+} from '../dto/generate-titles.dto';
 
 export const TITLE_PROMPT_VERSION = 'title-v1';
 
@@ -16,7 +19,7 @@ export function buildTitleSystemPrompt() {
 }
 
 export function buildTitleUserPrompt(dto: GenerateTitlesDto) {
-  const count = dto.count ?? 10;
+  const count = dto.count ?? DEFAULT_TITLE_COUNT;
 
   return [
     `请生成 ${count} 个小红书风格标题。`,

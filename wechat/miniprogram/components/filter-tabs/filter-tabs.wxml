@@ -1,0 +1,11 @@
+<view class="filter-row">
+  <view
+    wx:for="{{filters}}"
+    wx:key="label"
+    class="filter {{active === item.value ? 'filter--active' : ''}}"
+    bindtap="change"
+    data-value="{{item.value}}"
+  >
+    {{item.label}}
+  </view>
+</view>

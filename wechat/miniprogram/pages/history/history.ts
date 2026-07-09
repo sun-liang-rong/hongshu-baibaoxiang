@@ -1,5 +1,5 @@
 import { clear, list, remove } from '../../services/history';
-import { HistoryItem, RecordType, WatermarkResult } from '../../types/domain';
+import { CopywritingResult, HistoryItem, RecordType, WatermarkResult } from '../../types/domain';
 import { formatDateTime, typeLabel } from '../../utils/format';
 import { setStorage } from '../../utils/storage';
 import { confirmAction, copyText, showToast } from '../../utils/ui';
@@ -21,6 +21,10 @@ Component({
     filters,
     activeType: '' as '' | RecordType,
     items: [] as ViewItem[],
+    nextCursor: '',
+    hasMore: false,
+    loading: false,
+    loadingMore: false,
   },
   pageLifetimes: {
     show() {
@@ -33,23 +37,55 @@ Component({
     },
   },
   methods: {
-    async load() {
+    async load(append = false) {
+      if (!append && this.data.loading) {
+        return;
+      }
+
+      if (append && (!this.data.hasMore || this.data.loadingMore)) {
+        return;
+      }
+
       const activeType = this.data.activeType || undefined;
-      const items = await list(activeType);
       this.setData({
-        items: items.map((item) => ({
-          ...item,
-          label: typeLabel(item.type),
-          time: formatDateTime(item.createdAt),
-        })),
+        loading: !append,
+        loadingMore: append,
       });
+
+      try {
+        const page = await list(activeType, {
+          cursor: append ? this.data.nextCursor : '',
+        });
+        const items = page.items.map((item) => this.toViewItem(item));
+        this.setData({
+          items: append ? [...this.data.items, ...items] : items,
+          nextCursor: page.nextCursor,
+          hasMore: Boolean(page.nextCursor),
+        });
+      } catch (error) {
+        const message = error instanceof Error ? error.message : '历史记录加载失败';
+        showToast(message);
+      } finally {
+        this.setData({
+          loading: false,
+          loadingMore: false,
+        });
+      }
     },
-    switchType(e: WechatMiniprogram.TouchEvent) {
-      this.setData({ activeType: e.currentTarget.dataset.type as '' | RecordType });
+    switchType(e: WechatMiniprogram.CustomEvent) {
+      this.setData({
+        activeType: (e.detail as { value: '' | RecordType }).value,
+        items: [],
+        nextCursor: '',
+        hasMore: false,
+      });
       this.load();
     },
-    open(e: WechatMiniprogram.TouchEvent) {
-      const id = e.currentTarget.dataset.id as string;
+    loadMore() {
+      this.load(true);
+    },
+    open(e: WechatMiniprogram.CustomEvent) {
+      const id = (e.detail as { id: string }).id;
       const item = this.data.items.find((entry) => entry.id === id);
       if (!item) {
         return;
@@ -66,11 +102,11 @@ Component({
         return;
       }
 
-      setStorage('hshu_copy_seed', item.title);
+      setStorage('hshu_copy_result', item.payload as CopywritingResult);
       wx.switchTab({ url: '/pages/copywriting-generate/copywriting-generate' });
     },
-    copy(e: WechatMiniprogram.TouchEvent) {
-      const id = e.currentTarget.dataset.id as string;
+    copy(e: WechatMiniprogram.CustomEvent) {
+      const id = (e.detail as { id: string }).id;
       const item = this.data.items.find((entry) => entry.id === id);
       if (!item) {
         return;
@@ -83,8 +119,8 @@ Component({
 
       copyText(item.summary || item.title);
     },
-    async remove(e: WechatMiniprogram.TouchEvent) {
-      const id = e.currentTarget.dataset.id as string;
+    async remove(e: WechatMiniprogram.CustomEvent) {
+      const id = (e.detail as { id: string }).id;
       const ok = await confirmAction('删除这条历史记录？');
       if (!ok) {
         return;
@@ -101,6 +137,13 @@ Component({
       await clear(this.data.activeType || undefined);
       showToast('已清空', 'success');
       this.load();
+    },
+    toViewItem(item: HistoryItem): ViewItem {
+      return {
+        ...item,
+        label: typeLabel(item.type),
+        time: formatDateTime(item.createdAt),
+      };
     },
   },
 });

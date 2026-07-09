@@ -1,5 +1,13 @@
 <view class="empty-state">
-  <view class="empty-state__icon"></view>
+  <view class="empty-state__visual">
+    <view class="empty-state__sheet">
+      <view></view>
+      <view></view>
+      <view></view>
+    </view>
+    <view class="empty-state__spark empty-state__spark--one"></view>
+    <view class="empty-state__spark empty-state__spark--two"></view>
+  </view>
   <view class="empty-state__title">{{title}}</view>
   <view wx:if="{{desc}}" class="empty-state__desc">{{desc}}</view>
 </view>

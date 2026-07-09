@@ -1,5 +1,7 @@
 import { DouyinDetail } from './douyin-parser.types';
 
+const UNIVERSAL_STATE_MARKER = '__UNIVERSAL_DATA_FOR_REHYDRATION__';
+
 export function extractDouyinUrl(input: string) {
   if (!input || typeof input !== 'string') {
     throw new Error('请输入抖音分享链接或包含链接的分享文本');
@@ -36,7 +38,13 @@ export function isDouyinUrl(url: string) {
 
 export function extractAwemeId(url: string) {
   const parsed = new URL(url);
-  const patterns = [/\/share\/video\/(\d+)/, /\/video\/(\d+)/, /\/note\/(\d+)/];
+  const patterns = [
+    /\/share\/video\/(\d+)/,
+    /\/video\/(\d+)/,
+    /\/share\/note\/(\d+)/,
+    /\/note\/(\d+)/,
+    /\/discover\/?\?.*\bmodal_id=(\d+)/,
+  ];
 
   for (const pattern of patterns) {
     const matched = parsed.pathname.match(pattern);
@@ -58,12 +66,46 @@ export function extractAwemeId(url: string) {
   throw new Error('未提取到抖音视频 ID');
 }
 
+export function normalizeDouyinVideoUrl(url: string, awemeId?: string) {
+  const id = awemeId || extractAwemeId(url);
+  return `https://www.douyin.com/video/${id}`;
+}
+
 export function buildNoWatermarkUrl(url: string) {
   if (!url) {
     return '';
   }
 
   return url.replace('/playwm/', '/play/').replace('playwm/?', 'play/?');
+}
+
+export function extractVideoFromXgContainer(
+  html: string,
+): Partial<DouyinDetail> {
+  const container =
+    html.match(
+      /<[^>]+class=["'][^"']*\bxg-video-container\b[^"']*["'][^>]*>[\s\S]*?<\/(?:div|xg-video)>/i,
+    )?.[0] || html;
+  const videoTag = container.match(/<video\b[\s\S]*?>/i)?.[0];
+  const videoUrl = buildNoWatermarkUrl(
+    normalizeUrl(
+      videoTag?.match(/\s(?:src|currentSrc)=["']([^"']+)["']/i)?.[1],
+    ),
+  );
+  const coverUrl = normalizeUrl(
+    videoTag?.match(/\sposter=["']([^"']+)["']/i)?.[1],
+  );
+
+  if (!videoUrl) {
+    throw new Error('未从 xg-video-container 提取到视频地址');
+  }
+
+  return {
+    type: 'video',
+    images: [],
+    videoUrl,
+    coverUrl,
+  };
 }
 
 export function extractDouyinDetail(response: unknown): DouyinDetail {
@@ -73,29 +115,61 @@ export function extractDouyinDetail(response: unknown): DouyinDetail {
     throw new Error('抖音详情数据为空');
   }
 
+  return normalizeDouyinItem(item);
+}
+
+export function extractDouyinDetailFromHtml(
+  html: string,
+  awemeId: string,
+): DouyinDetail {
+  for (const state of extractJsonStates(html)) {
+    const item = findDouyinItem(state, awemeId);
+    if (item) {
+      return normalizeDouyinItem(item);
+    }
+  }
+
+  throw new Error('未从抖音页面提取到视频详情');
+}
+
+function normalizeDouyinItem(item: Record<string, unknown>): DouyinDetail {
   const video = getRecord(item, 'video');
   const music = getRecord(item, 'music');
-  const watermarkedVideoUrl = firstUrlFromRecordPath(video, [
-    'play_addr',
-    'url_list',
-  ]);
+  const watermarkedVideoUrl =
+    firstUrlFromAnyPath(video, ['play_addr', 'url_list']) ||
+    firstUrlFromAnyPath(video, ['playAddr', 'urlList']) ||
+    firstUrlFromAnyPath(video, ['playAddr']) ||
+    firstUrlFromAnyPath(video, ['playApi']) ||
+    firstUrlFromAnyPath(video, ['download_addr', 'url_list']) ||
+    firstUrlFromAnyPath(video, ['downloadAddr', 'urlList']) ||
+    firstUrlFromAnyPath(video, ['downloadAddr']) ||
+    firstUrlFromBitRate(video);
   const noWatermarkVideoUrl = buildNoWatermarkUrl(watermarkedVideoUrl);
   if (!noWatermarkVideoUrl) {
     throw new Error('未找到抖音视频播放地址');
   }
 
   return {
-    noteId: getString(item, 'aweme_id'),
-    title: '',
-    content: getString(item, 'desc'),
+    noteId: getString(item, 'aweme_id') || getString(item, 'awemeId'),
+    title: getString(item, 'title'),
+    content: getString(item, 'desc') || getString(item, 'description'),
     type: 'video',
     images: [],
     coverUrl:
-      firstUrlFromRecordPath(video, ['dynamic_cover', 'url_list']) ||
-      firstUrlFromRecordPath(video, ['origin_cover', 'url_list']) ||
-      firstUrlFromRecordPath(video, ['cover', 'url_list']),
+      firstUrlFromAnyPath(video, ['dynamic_cover', 'url_list']) ||
+      firstUrlFromAnyPath(video, ['dynamicCover', 'urlList']) ||
+      firstUrlFromAnyPath(video, ['dynamicCover']) ||
+      firstUrlFromAnyPath(video, ['origin_cover', 'url_list']) ||
+      firstUrlFromAnyPath(video, ['originCover', 'urlList']) ||
+      firstUrlFromAnyPath(video, ['originCover']) ||
+      firstUrlFromAnyPath(video, ['cover', 'url_list']) ||
+      firstUrlFromAnyPath(video, ['cover', 'urlList']) ||
+      firstUrlFromAnyPath(video, ['cover']),
     videoUrl: noWatermarkVideoUrl,
-    musicUrl: firstUrlFromRecordPath(music, ['play_url', 'url_list']),
+    musicUrl:
+      firstUrlFromAnyPath(music, ['play_url', 'url_list']) ||
+      firstUrlFromAnyPath(music, ['playUrl', 'urlList']) ||
+      firstUrlFromAnyPath(music, ['playUrl']),
   };
 }
 
@@ -103,7 +177,7 @@ function firstUrl(urls?: string[]) {
   return Array.isArray(urls) ? urls.find(Boolean) || '' : '';
 }
 
-function firstUrlFromRecordPath(
+function firstUrlFromAnyPath(
   source: Record<string, unknown> | null,
   path: string[],
 ): string {
@@ -118,7 +192,234 @@ function firstUrlFromRecordPath(
     current = record[key];
   }
 
-  return firstUrl(toStringArray(current));
+  return firstUrlFromAny(current);
+}
+
+function firstUrlFromBitRate(video: Record<string, unknown> | null) {
+  const lists = [video?.bit_rate, video?.bitRateList];
+  for (const list of lists) {
+    if (!Array.isArray(list)) {
+      continue;
+    }
+
+    for (const item of list) {
+      const record = asRecord(item);
+      const url =
+        firstUrlFromAnyPath(record, ['play_addr', 'url_list']) ||
+        firstUrlFromAnyPath(record, ['playAddr', 'urlList']) ||
+        firstUrlFromAnyPath(record, ['playAddr']);
+      if (url) {
+        return url;
+      }
+    }
+  }
+
+  return '';
+}
+
+function firstUrlFromAny(value: unknown): string {
+  const normalized = normalizeUrl(value);
+  if (normalized) {
+    return normalized;
+  }
+
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      const url = firstUrlFromAny(item);
+      if (url) {
+        return url;
+      }
+    }
+    return '';
+  }
+
+  const record = asRecord(value);
+  if (!record) {
+    return '';
+  }
+
+  for (const key of ['url_list', 'urlList', 'urls', 'url']) {
+    const url = firstUrlFromAny(record[key]);
+    if (url) {
+      return url;
+    }
+  }
+
+  return '';
+}
+
+function normalizeUrl(value: unknown) {
+  if (typeof value !== 'string') {
+    return '';
+  }
+
+  const url = value.trim().replace(/&amp;/g, '&');
+  if (url.startsWith('//')) {
+    return `https:${url}`;
+  }
+
+  return /^https?:\/\//i.test(url) ? url : '';
+}
+
+function extractJsonStates(html: string): unknown[] {
+  const states: unknown[] = [];
+  const renderData = html.match(
+    /<script[^>]+id=["']RENDER_DATA["'][^>]*>([\s\S]*?)<\/script>/i,
+  )?.[1];
+  if (renderData) {
+    states.push(parseJsonState(decodeHtml(renderData)));
+  }
+
+  const universalData = html.match(
+    /<script[^>]+id=["']__UNIVERSAL_DATA_FOR_REHYDRATION__["'][^>]*>([\s\S]*?)<\/script>/i,
+  )?.[1];
+  if (universalData) {
+    states.push(parseJsonState(decodeHtml(universalData)));
+  }
+
+  const markerIndex = html.indexOf(UNIVERSAL_STATE_MARKER);
+  if (markerIndex !== -1) {
+    const equalsIndex = html.indexOf('=', markerIndex);
+    const startIndex = equalsIndex === -1 ? -1 : html.indexOf('{', equalsIndex);
+    if (startIndex !== -1) {
+      states.push(parseJsonState(readBalancedObject(html, startIndex)));
+    }
+  }
+
+  return states.filter((state) => state !== null);
+}
+
+function parseJsonState(value: string) {
+  try {
+    return JSON.parse(value);
+  } catch {
+    try {
+      return JSON.parse(decodeURIComponent(value));
+    } catch {
+      return null;
+    }
+  }
+}
+
+function decodeHtml(value: string) {
+  return value
+    .replace(/&quot;/g, '"')
+    .replace(/&#34;/g, '"')
+    .replace(/&amp;/g, '&')
+    .trim();
+}
+
+function findDouyinItem(
+  value: unknown,
+  awemeId: string,
+  seen = new WeakSet<object>(),
+): Record<string, unknown> | null {
+  if (!value || typeof value !== 'object') {
+    return null;
+  }
+
+  if (seen.has(value)) {
+    return null;
+  }
+  seen.add(value);
+
+  if (Array.isArray(value)) {
+    let fallback: Record<string, unknown> | null = null;
+    for (const item of value) {
+      const matched = findDouyinItem(item, awemeId, seen);
+      if (matched && getDouyinItemId(matched) === awemeId) {
+        return matched;
+      }
+      fallback = fallback || matched;
+    }
+    return fallback;
+  }
+
+  const record = value as Record<string, unknown>;
+  const id = getDouyinItemId(record);
+  if (isDouyinItem(record) && (!awemeId || !id || id === awemeId)) {
+    return record;
+  }
+
+  let fallback: Record<string, unknown> | null = null;
+  for (const child of Object.values(record)) {
+    const matched = findDouyinItem(child, awemeId, seen);
+    if (matched && getDouyinItemId(matched) === awemeId) {
+      return matched;
+    }
+    fallback = fallback || matched;
+  }
+
+  return fallback;
+}
+
+function getDouyinItemId(record: Record<string, unknown>) {
+  return (
+    getString(record, 'aweme_id') ||
+    getString(record, 'awemeId') ||
+    getString(record, 'id')
+  );
+}
+
+function isDouyinItem(record: Record<string, unknown>) {
+  const video = asRecord(record.video);
+  if (!video) {
+    return false;
+  }
+
+  return Boolean(
+    firstUrlFromAnyPath(video, ['play_addr', 'url_list']) ||
+    firstUrlFromAnyPath(video, ['playAddr', 'urlList']) ||
+    firstUrlFromAnyPath(video, ['playAddr']) ||
+    firstUrlFromAnyPath(video, ['playApi']) ||
+    firstUrlFromAnyPath(video, ['download_addr', 'url_list']) ||
+    firstUrlFromAnyPath(video, ['downloadAddr', 'urlList']) ||
+    firstUrlFromAnyPath(video, ['downloadAddr']) ||
+    firstUrlFromBitRate(video) ||
+    firstUrlFromAnyPath(video, ['cover', 'url_list']) ||
+    firstUrlFromAnyPath(video, ['cover', 'urlList']) ||
+    firstUrlFromAnyPath(video, ['cover']),
+  );
+}
+
+function readBalancedObject(text: string, startIndex: number) {
+  let depth = 0;
+  let inString = false;
+  let quote = '';
+  let escaped = false;
+
+  for (let index = startIndex; index < text.length; index += 1) {
+    const char = text[index];
+
+    if (inString) {
+      if (escaped) {
+        escaped = false;
+      } else if (char === '\\') {
+        escaped = true;
+      } else if (char === quote) {
+        inString = false;
+        quote = '';
+      }
+      continue;
+    }
+
+    if (char === '"' || char === "'") {
+      inString = true;
+      quote = char;
+      continue;
+    }
+
+    if (char === '{') {
+      depth += 1;
+    } else if (char === '}') {
+      depth -= 1;
+      if (depth === 0) {
+        return text.slice(startIndex, index + 1);
+      }
+    }
+  }
+
+  return '{}';
 }
 
 function getRecord(

@@ -1,4 +1,4 @@
-<navigation-bar title="我的" back="{{false}}" color="#1f1f1f" background="#ffffff"></navigation-bar>
+<navigation-bar title="我的" back="{{false}}" color="#25232a" background="transparent"></navigation-bar>
 <scroll-view class="page-scroll" scroll-y type="list">
   <view class="profile">
     <view class="user-card">
@@ -10,17 +10,9 @@
     </view>
 
     <view class="stat-row">
-      <view class="stat-item">
-        <view class="stat-item__num">3</view>
-        <view class="stat-item__label">创作工具</view>
-      </view>
-      <view class="stat-item">
-        <view class="stat-item__num">0</view>
-        <view class="stat-item__label">次数限制</view>
-      </view>
-      <view class="stat-item">
-        <view class="stat-item__num">0</view>
-        <view class="stat-item__label">广告干扰</view>
+      <view wx:for="{{quotaStats}}" wx:key="key" class="stat-item stat-item--{{item.key}}">
+        <view class="stat-item__num">{{item.num}}</view>
+        <view class="stat-item__label">{{item.label}}</view>
       </view>
     </view>
 
@@ -35,7 +27,7 @@
     </view>
 
     <view class="about-box">
-      红薯百宝箱一期专注去水印、标题生成和文案生成，不包含会员、充值、广告奖励和次数限制。
+      今日次数会在每天 00:00 后恢复，具体额度以后台配置为准。
     </view>
   </view>
 </scroll-view>

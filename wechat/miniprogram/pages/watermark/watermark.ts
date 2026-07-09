@@ -1,5 +1,7 @@
-import { parse } from "../../services/watermark";
+import { getQuota, parse } from "../../services/watermark";
+import { GenerateQuota } from "../../types/domain";
 import { setStorage } from "../../utils/storage";
+import { syncTabBar } from "../../utils/tabbar";
 import { showToast } from "../../utils/ui";
 import {
   isValidSupportedLinkText,
@@ -10,8 +12,28 @@ Component({
   data: {
     text: "",
     loading: false,
+    quota: {
+      used: 0,
+      limit: 20,
+      remaining: 20,
+    } as GenerateQuota,
+    quotaReady: false,
+  },
+  pageLifetimes: {
+    show() {
+      syncTabBar(this, 0);
+      this.loadQuota();
+    },
   },
   methods: {
+    async loadQuota() {
+      try {
+        const quota = await getQuota();
+        this.setData({ quota, quotaReady: true });
+      } catch {
+        this.setData({ quotaReady: false });
+      }
+    },
     onInput(e: WechatMiniprogram.Input) {
       this.setData({ text: e.detail.value });
     },
@@ -27,6 +49,11 @@ Component({
     },
     async submit() {
       const text = normalizeInput(this.data.text);
+
+      if (this.data.quotaReady && this.data.quota.remaining <= 0) {
+        showToast("今日解析次数已用完，明天再来试试");
+        return;
+      }
 
       if (!text) {
         showToast("请先粘贴红薯链接");
@@ -48,6 +75,11 @@ Component({
 
       try {
         const result = await parse({ text });
+        if (result.quota) {
+          this.setData({ quota: result.quota, quotaReady: true });
+        } else {
+          this.loadQuota();
+        }
         setStorage("hshu_latest_watermark", result);
         wx.navigateTo({ url: "/pages/watermark-result/watermark-result" });
       } catch (error) {

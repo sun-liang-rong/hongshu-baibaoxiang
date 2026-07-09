@@ -1,5 +1,5 @@
-<navigation-bar title="解析结果" color="#1f1f1f" background="#ffffff"></navigation-bar>
-<view class="page-scroll">
+<navigation-bar title="解析结果" color="#25232a" background="transparent"></navigation-bar>
+<scroll-view class="page-scroll" scroll-y type="list">
   <block wx:if="{{result}}">
     <view class="result-page">
       <view class="section section--first">
@@ -16,7 +16,6 @@
               show-fullscreen-btn="{{false}}"
               object-fit="contain"
             ></video>
-            <button class="video-fullscreen" bindtap="openVideoFullscreen">全屏播放</button>
           </view>
           <button class="button button--ghost" bindtap="saveVideo">保存视频</button>
         </block>
@@ -31,9 +30,14 @@
       <view class="section">
         <view class="section__title">原文案</view>
         <view class="content-box">{{result.content}}</view>
-        <button class="button button--primary" bindtap="copyContent">复制文案</button>
+        <view class="result-actions">
+          <button class="button button--primary" bindtap="copyContent">复制文案</button>
+          <button class="button button--ghost {{favorited ? 'button--favorited' : ''}}" bindtap="toggleFavorite">
+            {{favorited ? '已收藏' : '收藏'}}
+          </button>
+        </view>
       </view>
     </view>
   </block>
   <empty-state wx:else title="暂无解析结果" desc="请先粘贴红薯链接并完成解析"></empty-state>
-</view>
+</scroll-view>

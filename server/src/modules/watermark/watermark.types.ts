@@ -1,4 +1,5 @@
 import { XhsImageResult } from '../../integrations/xhs-parser/xhs-parser.types';
+import { GenerateQuota } from '../generate/types/generate.types';
 
 export interface WatermarkParseResponse {
   id: string;
@@ -15,4 +16,5 @@ export interface WatermarkParseResponse {
   musicUrl?: string;
   status: 'success';
   createdAt: string;
+  quota?: GenerateQuota;
 }

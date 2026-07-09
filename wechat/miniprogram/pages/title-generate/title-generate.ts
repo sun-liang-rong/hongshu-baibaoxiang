@@ -1,7 +1,14 @@
-import { toggle } from '../../services/favorites';
+import { check, toggle } from '../../services/favorites';
 import { titles } from '../../services/generate';
 import { getStorage, removeStorage } from '../../utils/storage';
+import { syncTabBar } from '../../utils/tabbar';
 import { copyText, showToast } from '../../utils/ui';
+
+interface TitleViewItem {
+  text: string;
+  refId: string;
+  favorited: boolean;
+}
 
 Component({
   data: {
@@ -9,16 +16,17 @@ Component({
     audience: '',
     contentTypes: ['种草推荐', '避坑经验', '干货教程', '探店打卡', '好物测评', '合集推荐', '对比测评', '新手必看'],
     styles: ['真实分享', '轻松口语', '干货实用', '情绪共鸣', '强吸引力', '数字清单'],
-    counts: [5, 10, 15, 20],
+    counts: [1, 2, 3],
     contentTypeIndex: 0,
     styleIndex: 0,
     countIndex: 1,
-    generatedTitles: [] as string[],
+    generatedTitles: [] as TitleViewItem[],
     recordId: '',
     loading: false,
   },
   pageLifetimes: {
     show() {
+      syncTabBar(this, 1);
       const seed = getStorage<string>('hshu_title_seed', '');
       if (seed) {
         this.setData({ topic: seed });
@@ -68,10 +76,16 @@ Component({
           style: this.data.styles[this.data.styleIndex],
           count: this.data.counts[this.data.countIndex],
         });
+        const generatedTitles = result.titles.map((title) => ({
+          text: title,
+          refId: this.createTitleRefId(result.recordId, title),
+          favorited: false,
+        }));
         this.setData({
-          generatedTitles: result.titles,
+          generatedTitles,
           recordId: result.recordId,
         });
+        this.syncFavoriteStatus();
       } catch (error) {
         const message = error instanceof Error ? error.message : '生成失败，请稍后重试';
         showToast(message);
@@ -83,20 +97,37 @@ Component({
       copyText(e.currentTarget.dataset.title as string, '标题已复制');
     },
     async favorite(e: WechatMiniprogram.TouchEvent) {
-      const title = e.currentTarget.dataset.title as string;
+      const refId = e.currentTarget.dataset.refId as string;
+      const item = this.data.generatedTitles.find((entry) => entry.refId === refId);
+      if (!item) {
+        return;
+      }
+
       const status = await toggle({
         type: 'title',
-        refId: `${this.data.recordId}_${title}`,
-        title,
+        refId: item.refId,
+        title: item.text,
         summary: this.data.topic,
-        payload: title,
+        payload: item.text,
+      });
+      this.setData({
+        generatedTitles: this.data.generatedTitles.map((entry) =>
+          entry.refId === item.refId ? { ...entry, favorited: status.favorited } : entry,
+        ),
       });
       showToast(status.favorited ? '已收藏' : '已取消收藏', 'success');
     },
-    similar(e: WechatMiniprogram.TouchEvent) {
-      const title = e.currentTarget.dataset.title as string;
-      this.setData({ topic: title });
-      this.generate();
+    async syncFavoriteStatus() {
+      const generatedTitles = await Promise.all(
+        this.data.generatedTitles.map(async (item) => ({
+          ...item,
+          favorited: await check('title', item.refId),
+        })),
+      );
+      this.setData({ generatedTitles });
+    },
+    createTitleRefId(recordId: string, title: string) {
+      return `${recordId}_${title}`;
     },
   },
 });

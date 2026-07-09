@@ -1,14 +1,22 @@
-<navigation-bar title="标题生成" back="{{false}}" color="#1f1f1f" background="#ffffff"></navigation-bar>
+<navigation-bar title="标题生成" back="{{false}}" color="#25232a" background="transparent"></navigation-bar>
 <scroll-view class="page-scroll" scroll-y type="list">
   <view class="page-wrap">
     <view class="page-head">
       <view class="page-kicker">标题灵感</view>
-      <view class="page-title">生成小红书感标题</view>
-      <view class="page-subtitle">输入主题，一次生成多条可收藏、可复制的笔记标题。</view>
+      <view class="page-title">把普通选题变成可点击标题</view>
+      <view class="page-subtitle">输入主题和目标人群，一次生成多条更像创作者笔记的标题。</view>
     </view>
     <view class="form-card">
+      <view class="form-head">
+        <view>
+          <view class="panel-title">创作配置</view>
+          <view class="panel-subtitle">先确定内容方向，再选择标题语气。</view>
+        </view>
+        <view class="panel-badge">Title</view>
+      </view>
       <view class="field">
         <view class="field__label">标题主题</view>
+        <view class="field__hint">越具体越容易生成有画面感的标题。</view>
         <input class="input" value="{{topic}}" placeholder="例如：新手做红薯探店" bindinput="onTopicInput" />
       </view>
       <view class="field">
@@ -18,38 +26,58 @@
       <view class="picker-grid">
         <picker mode="selector" range="{{contentTypes}}" value="{{contentTypeIndex}}" bindchange="onContentTypeChange">
           <view class="picker-box">
-            <text>内容类型</text>
-            <text>{{contentTypes[contentTypeIndex]}}</text>
+            <view>
+              <text class="picker-box__label">内容类型</text>
+              <text class="picker-box__value">{{contentTypes[contentTypeIndex]}}</text>
+            </view>
+            <text class="picker-box__chevron">⌄</text>
           </view>
         </picker>
         <picker mode="selector" range="{{styles}}" value="{{styleIndex}}" bindchange="onStyleChange">
           <view class="picker-box">
-            <text>标题风格</text>
-            <text>{{styles[styleIndex]}}</text>
+            <view>
+              <text class="picker-box__label">标题风格</text>
+              <text class="picker-box__value">{{styles[styleIndex]}}</text>
+            </view>
+            <text class="picker-box__chevron">⌄</text>
           </view>
         </picker>
         <picker mode="selector" range="{{counts}}" value="{{countIndex}}" bindchange="onCountChange">
           <view class="picker-box">
-            <text>生成数量</text>
-            <text>{{counts[countIndex]}} 条</text>
+            <view>
+              <text class="picker-box__label">生成数量</text>
+              <text class="picker-box__value">{{counts[countIndex]}} 条</text>
+            </view>
+            <text class="picker-box__chevron">⌄</text>
           </view>
         </picker>
       </view>
-      <button class="button button--primary" loading="{{loading}}" bindtap="generate">生成标题</button>
+      <button class="button button--primary cta-button" loading="{{loading}}" bindtap="generate">生成标题</button>
     </view>
 
     <view class="result-section">
-      <view class="section-title">生成结果</view>
+      <view class="result-head">
+        <view>
+          <view class="section-title">标题工作区</view>
+          <view class="section-subtitle">复制可直接发布，收藏后可在「我的」里找回。</view>
+        </view>
+        <view wx:if="{{generatedTitles.length}}" class="result-count">{{generatedTitles.length}} 条</view>
+      </view>
       <block wx:if="{{generatedTitles.length}}">
-        <view wx:for="{{generatedTitles}}" wx:key="*this" class="title-item">
-          <view class="title-item__text">{{item}}</view>
+        <view wx:for="{{generatedTitles}}" wx:key="refId" class="title-item">
+          <view class="title-item__text">{{item.text}}</view>
           <view class="title-item__actions">
-            <button bindtap="copy" data-title="{{item}}">复制</button>
-            <button bindtap="favorite" data-title="{{item}}">收藏</button>
-            <button bindtap="similar" data-title="{{item}}">相似</button>
+            <button bindtap="copy" data-title="{{item.text}}">复制</button>
+            <button
+              class="{{item.favorited ? 'favorited' : ''}}"
+              bindtap="favorite"
+              data-ref-id="{{item.refId}}"
+            >
+              {{item.favorited ? '已收藏' : '收藏'}}
+            </button>
           </view>
         </view>
-        <button class="button button--ghost" loading="{{loading}}" bindtap="generate">换一批</button>
+        <button class="button button--ghost refresh-button" loading="{{loading}}" bindtap="generate">换一批</button>
       </block>
       <empty-state wx:else title="还没有生成标题" desc="输入主题后，一次生成多条红薯风格标题"></empty-state>
     </view>

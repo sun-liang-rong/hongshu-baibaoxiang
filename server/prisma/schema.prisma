@@ -8,6 +8,7 @@ datasource db {
 }
 
 enum GenerateType {
+  watermark
   title
   copywriting
 }
@@ -17,23 +18,9 @@ enum GenerateStatus {
   failed
 }
 
-model User {
-  id          BigInt    @id @default(autoincrement())
-  openid      String    @unique
-  unionid     String?
-  nickname    String?
-  avatarUrl   String?   @map("avatar_url")
-  status      Int       @default(1)
-  createdAt   DateTime  @default(now()) @map("created_at")
-  updatedAt   DateTime  @updatedAt @map("updated_at")
-  lastLoginAt DateTime? @map("last_login_at")
-
-  @@map("users")
-}
-
 model GenerateRecord {
   id            BigInt         @id @default(autoincrement())
-  userId        BigInt?        @map("user_id")
+  openid        String?        @db.VarChar(64)
   type          GenerateType
   topic         String
   input         Json
@@ -48,6 +35,22 @@ model GenerateRecord {
   createdAt     DateTime       @default(now()) @map("created_at")
   updatedAt     DateTime       @updatedAt @map("updated_at")
 
-  @@index([userId, type, createdAt])
+  @@index([openid, type, createdAt])
   @@map("generate_records")
+}
+
+model Favorite {
+  id        BigInt       @id @default(autoincrement())
+  openid    String       @db.VarChar(64)
+  type      GenerateType
+  refId     String       @map("ref_id")
+  title     String
+  summary   String?      @db.Text
+  payload   Json
+  createdAt DateTime     @default(now()) @map("created_at")
+  updatedAt DateTime     @updatedAt @map("updated_at")
+
+  @@unique([openid, type, refId])
+  @@index([openid, type, createdAt])
+  @@map("favorites")
 }

@@ -1,5 +1,5 @@
 import { isMockMode } from "../config/env";
-import { WatermarkResult } from "../types/domain";
+import { GenerateQuota, WatermarkResult } from "../types/domain";
 import { addHistory, createWatermarkResult } from "./mock-store";
 import { request } from "./request";
 
@@ -50,4 +50,19 @@ export const parse = (input: {
     auth: true,
     loadingText: "解析中",
   }).then(normalizeWatermarkResult);
+};
+
+export const getQuota = (): Promise<GenerateQuota> => {
+  if (isMockMode()) {
+    return Promise.resolve({
+      used: 0,
+      limit: 20,
+      remaining: 20,
+    });
+  }
+
+  return request<GenerateQuota>({
+    url: "/watermark/quota",
+    auth: true,
+  });
 };

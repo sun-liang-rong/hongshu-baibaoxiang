@@ -1,50 +1,43 @@
 page {
-  min-height: 100vh;
-  background: #fff7f8;
-}
-
-.page-scroll {
-  height: calc(100vh - 88rpx);
-}
-
-.doc-page {
-  padding: 24rpx 24rpx 48rpx;
+  height: 100vh;
+  overflow: hidden;
 }
 
 .doc-card {
-  padding: 28rpx;
-  border-radius: 28rpx;
-  background: #ffffff;
-  border: 1rpx solid rgba(255, 36, 66, 0.08);
-  box-shadow: 0 16rpx 42rpx rgba(36, 18, 22, 0.055);
+  padding: 30rpx 28rpx;
 }
 
 .doc-title {
   margin-bottom: 20rpx;
-  color: #202124;
+  color: var(--ink);
   font-size: 34rpx;
-  font-weight: 900;
+  font-weight: 850;
+  line-height: 1.28;
 }
 
 .notice-row {
   display: flex;
   gap: 16rpx;
   margin-top: 18rpx;
+  padding: 18rpx;
+  border: 0;
+  border-radius: 24rpx;
+  background: rgba(255, 255, 255, 0.62);
 }
 
 .notice-dot {
-  flex: none;
   width: 14rpx;
   height: 14rpx;
+  flex: none;
   margin-top: 14rpx;
   border-radius: 50%;
-  background: #ff2442;
-  box-shadow: 0 6rpx 12rpx rgba(255, 36, 66, 0.22);
+  background: var(--amber);
+  box-shadow: 0 6rpx 12rpx rgba(180, 107, 18, 0.18);
 }
 
 .notice-text {
   flex: 1;
-  color: #74696c;
-  font-size: 28rpx;
-  line-height: 1.65;
+  color: var(--ink-soft);
+  font-size: 27rpx;
+  line-height: 1.66;
 }

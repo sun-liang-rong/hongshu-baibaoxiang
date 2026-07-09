@@ -1,15 +1,16 @@
-<navigation-bar title="红薯宝箱" back="{{false}}" color="#1f1f1f" background="#ffffff"></navigation-bar>
+<navigation-bar title="红薯宝箱" back="{{false}}" color="#25232a" background="transparent"></navigation-bar>
 <scroll-view class="page-scroll" scroll-y type="list">
   <view class="page-block">
     <view class="creator-card">
+      <view class="creator-card__glow"></view>
       <view class="creator-card__top">
-        <view class="brand-mark">红</view>
+        <view class="brand-mark">R</view>
         <view>
           <view class="page-kicker">创作工具箱</view>
-          <view class="page-title">去水印</view>
+          <view class="page-title">干净保存灵感素材</view>
         </view>
       </view>
-      <view class="page-subtitle">粘贴小红薯或痘音分享链接，提取干净素材和原文案。</view>
+      <view class="page-subtitle">粘贴小红薯或痘音分享内容，提取无水印素材、封面和原文案。</view>
       <view class="support-row">
         <text>小红薯</text>
         <text>痘音</text>
@@ -18,17 +19,36 @@
     </view>
 
     <view class="input-panel">
-      <view class="panel-title">粘贴分享内容</view>
+      <view class="panel-head">
+        <view>
+          <view class="panel-title">创作配置</view>
+          <view class="panel-subtitle">把分享口令或链接放进来，剩下交给工具处理。</view>
+        </view>
+        <view class="panel-badge">
+          {{quotaReady ? '剩余 ' + quota.remaining + '/' + quota.limit : '解析'}}
+        </view>
+      </view>
       <textarea
         class="textarea"
         value="{{text}}"
         maxlength="1200"
-        placeholder="请粘贴分享链接"
+        placeholder="粘贴分享链接、口令或完整分享文本"
         bindinput="onInput"
       />
+      <view class="input-meta">
+        <text>{{text.length || 0}}/1200</text>
+        <text wx:if="{{quotaReady}}">今日已用 {{quota.used}} 次</text>
+      </view>
       <view class="input-actions">
         <button class="button button--ghost" bindtap="paste">粘贴</button>
-        <button class="button button--primary" loading="{{loading}}" bindtap="submit">开始解析</button>
+        <button
+          class="button button--primary"
+          disabled="{{quotaReady && quota.remaining <= 0}}"
+          loading="{{loading}}"
+          bindtap="submit"
+        >
+          {{quotaReady && quota.remaining <= 0 ? '次数已用完' : '开始解析'}}
+        </button>
       </view>
     </view>
 

@@ -1,4 +1,12 @@
-import { CopywritingResult, FavoriteItem, FavoritePayload, HistoryItem, RecordType, WatermarkResult } from '../types/domain';
+import {
+  CopywritingResult,
+  FavoriteItem,
+  FavoritePayload,
+  HistoryItem,
+  PaginatedResult,
+  RecordType,
+  WatermarkResult,
+} from '../types/domain';
 import { getStorage, setStorage } from '../utils/storage';
 
 const HISTORY_KEY = 'hshu_history';
@@ -12,6 +20,12 @@ export const listHistory = (type?: RecordType) => {
   const list = getStorage<HistoryItem[]>(HISTORY_KEY, []);
   return type ? list.filter((item) => item.type === type) : list;
 };
+
+export const listHistoryPage = (
+  type?: RecordType,
+  cursor = '',
+  limit = 20,
+): PaginatedResult<HistoryItem> => paginate(listHistory(type), cursor, limit);
 
 export const addHistory = (item: Omit<HistoryItem, 'createdAt'>) => {
   const next: HistoryItem = {
@@ -46,6 +60,12 @@ export const listFavorites = (type?: RecordType) => {
   const list = getStorage<FavoriteItem[]>(FAVORITES_KEY, []);
   return type ? list.filter((item) => item.type === type) : list;
 };
+
+export const listFavoritesPage = (
+  type?: RecordType,
+  cursor = '',
+  limit = 20,
+): PaginatedResult<FavoriteItem> => paginate(listFavorites(type), cursor, limit);
 
 export const toggleFavorite = (payload: FavoritePayload) => {
   const list = listFavorites();
@@ -115,3 +135,20 @@ export const createCopywritingResult = (topic: string, style?: string, length?: 
   };
 };
 
+const paginate = <T extends { id: string }>(
+  list: T[],
+  cursor: string,
+  limit: number,
+): PaginatedResult<T> => {
+  const pageSize = Math.max(1, limit);
+  const startIndex = cursor ? list.findIndex((item) => item.id === cursor) + 1 : 0;
+  const safeStartIndex = startIndex > 0 ? startIndex : 0;
+  const pageItems = list.slice(safeStartIndex, safeStartIndex + pageSize);
+  const hasMore = safeStartIndex + pageSize < list.length;
+
+  return {
+    items: pageItems,
+    nextCursor: hasMore ? pageItems[pageItems.length - 1]?.id || '' : '',
+    pageSize,
+  };
+};

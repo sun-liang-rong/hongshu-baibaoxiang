@@ -55,7 +55,8 @@ Component({
    * 组件的初始数据
    */
   data: {
-    displayStyle: ''
+    displayStyle: '',
+    navigationStyle: '',
   },
   lifetimes: {
     attached() {
@@ -63,12 +64,17 @@ Component({
       wx.getSystemInfo({
         success: (res) => {
           const isAndroid = res.platform === 'android'
-          const isDevtools = res.platform === 'devtools'
+          const statusBarHeight = res.statusBarHeight || res.safeArea?.top || 0
+          const menuTop = rect.top || statusBarHeight + 4
+          const menuHeight = rect.height || 32
+          const navBarHeight = menuHeight + Math.max(menuTop - statusBarHeight, 0) * 2
+          const capsuleSpace = res.windowWidth - rect.left
+
           this.setData({
             ios: !isAndroid,
-            innerPaddingRight: `padding-right: ${res.windowWidth - rect.left}px`,
-            leftWidth: `width: ${res.windowWidth - rect.left }px`,
-            safeAreaTop: isDevtools || isAndroid ? `height: calc(var(--height) + ${res.safeArea.top}px); padding-top: ${res.safeArea.top}px` : ``
+            innerPaddingRight: `padding-right: ${capsuleSpace}px`,
+            leftWidth: `width: ${capsuleSpace}px`,
+            navigationStyle: `--status-bar-height: ${statusBarHeight}px; --navigation-bar-height: ${navBarHeight}px; height: ${statusBarHeight + navBarHeight}px; padding-top: ${statusBarHeight}px;`
           })
         }
       })

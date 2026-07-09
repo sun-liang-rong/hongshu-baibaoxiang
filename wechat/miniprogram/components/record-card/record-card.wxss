@@ -1,0 +1,64 @@
+.record-card {
+  margin-top: 18rpx;
+  padding: 24rpx;
+  border: 1rpx solid rgba(42, 34, 38, 0.07);
+  border-radius: 22rpx;
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+}
+
+.record-card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18rpx;
+}
+
+.record-card__time {
+  flex: none;
+  color: var(--muted);
+  font-size: 23rpx;
+}
+
+.record-card__title {
+  margin-top: 18rpx;
+  color: var(--ink);
+  font-size: 30rpx;
+  font-weight: 900;
+  line-height: 1.45;
+}
+
+.record-card__summary {
+  margin-top: 10rpx;
+  color: var(--ink-soft);
+  font-size: 26rpx;
+  line-height: 1.55;
+}
+
+.record-card__actions {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12rpx;
+  margin-top: 18rpx;
+}
+
+.record-card__actions button {
+  min-height: 66rpx;
+  border: 1rpx solid var(--line);
+  border-radius: 16rpx;
+  background: #ffffff;
+  color: var(--ink-soft);
+  font-size: 25rpx;
+  font-weight: 900;
+  line-height: 66rpx;
+}
+
+.record-card__actions button:first-child {
+  border-color: var(--xhs-red);
+  background: var(--xhs-red);
+  color: #ffffff;
+}
+
+.record-card__remove {
+  color: #b0443e !important;
+}

@@ -1,26 +1,14 @@
 page {
-  min-height: 100vh;
-  background: #fff7f8;
-}
-
-.page-scroll {
-  min-height: calc(100vh - 88rpx);
+  height: 100vh;
+  overflow: hidden;
 }
 
 .result-page {
-  padding: 24rpx 24rpx 56rpx;
-}
-
-.section {
-  border-radius: 28rpx;
-  background: #ffffff;
-  border: 1rpx solid rgba(255, 36, 66, 0.08);
-  box-shadow: 0 16rpx 42rpx rgba(36, 18, 22, 0.055);
+  padding-bottom: 64rpx;
 }
 
 .section {
   margin-top: 22rpx;
-  padding: 26rpx;
 }
 
 .section--first {
@@ -29,17 +17,14 @@ page {
 
 .section__title {
   margin-bottom: 18rpx;
-  color: #202124;
-  font-size: 31rpx;
-  font-weight: 900;
 }
-
 
 .video-card {
   overflow: hidden;
-  border-radius: 24rpx;
+  border: 0;
+  border-radius: 30rpx;
   background: #111111;
-  border: 1rpx solid #ffe5e9;
+  box-shadow: 0 14rpx 38rpx rgba(84, 62, 72, 0.12);
 }
 
 .media-video {
@@ -47,17 +32,6 @@ page {
   width: 100%;
   height: 430rpx;
   background: #111111;
-}
-
-.video-fullscreen {
-  width: 100%;
-  min-height: 78rpx;
-  border-radius: 0;
-  background: #191919;
-  color: #ffffff;
-  font-size: 26rpx;
-  font-weight: 900;
-  line-height: 78rpx;
 }
 
 .media-grid {
@@ -68,12 +42,14 @@ page {
 
 .media-item {
   overflow: hidden;
-  border-radius: 22rpx;
-  background: #fffafa;
-  border: 1rpx solid #ffe5e9;
+  border: 0;
+  border-radius: 28rpx;
+  background: rgba(255, 255, 255, 0.7);
+  box-shadow: inset 0 0 0 1rpx rgba(255, 255, 255, 0.76), 0 10rpx 28rpx rgba(84, 62, 72, 0.055);
 }
 
 .media-image {
+  display: block;
   width: 100%;
   height: 230rpx;
   background: #f1edef;
@@ -85,42 +61,27 @@ page {
 
 .small-button {
   width: 100%;
-  min-height: 74rpx;
+  border: 0;
+  border-top: 1rpx solid rgba(60, 51, 58, 0.06);
   border-radius: 0;
-  background: #fff1f3;
-  color: #ff2442;
-  font-size: 25rpx;
-  font-weight: 900;
-  line-height: 74rpx;
+  background: rgba(255, 49, 80, 0.08);
+  color: var(--xhs-red);
 }
 
-.content-box {
-  padding: 24rpx;
-  border-radius: 24rpx;
-  background: #fffafa;
-  color: #202124;
-  font-size: 28rpx;
-  line-height: 1.66;
-  white-space: pre-wrap;
-  border: 1rpx solid #ffe5e9;
-}
-
-.button {
+.section > .button {
   margin-top: 18rpx;
-  min-height: 88rpx;
-  border-radius: 999rpx;
-  font-size: 27rpx;
-  font-weight: 900;
-  line-height: 88rpx;
 }
 
-.button--primary {
-  background: #ff2442;
-  color: #ffffff;
-  box-shadow: 0 14rpx 28rpx rgba(255, 36, 66, 0.24);
+.result-actions {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 14rpx;
+  margin-top: 18rpx;
 }
 
-.button--ghost {
-  background: #fff1f3;
-  color: #ff2442;
+.result-actions .button {
+  min-width: 0;
+  min-height: 78rpx;
+  font-size: 25rpx;
+  line-height: 78rpx;
 }

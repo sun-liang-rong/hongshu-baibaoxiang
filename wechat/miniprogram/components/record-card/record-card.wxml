@@ -1,0 +1,13 @@
+<view class="record-card">
+  <view class="record-card__head">
+    <status-pill text="{{item.label}}"></status-pill>
+    <text class="record-card__time">{{item.time}}</text>
+  </view>
+  <view class="record-card__title" bindtap="open">{{item.title}}</view>
+  <view class="record-card__summary">{{item.summary}}</view>
+  <view class="record-card__actions">
+    <button bindtap="open">查看</button>
+    <button bindtap="copy">复制</button>
+    <button class="record-card__remove" bindtap="remove">删除</button>
+  </view>
+</view>

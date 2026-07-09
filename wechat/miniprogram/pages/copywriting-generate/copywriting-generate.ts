@@ -1,7 +1,8 @@
-import { toggle } from '../../services/favorites';
+import { check, toggle } from '../../services/favorites';
 import { copywriting } from '../../services/generate';
 import { CopywritingResult } from '../../types/domain';
 import { getStorage, removeStorage } from '../../utils/storage';
+import { syncTabBar } from '../../utils/tabbar';
 import { copyText, showToast } from '../../utils/ui';
 
 Component({
@@ -17,10 +18,24 @@ Component({
     lengthIndex: 1,
     includeTags: true,
     result: null as CopywritingResult | null,
+    favorited: false,
     loading: false,
   },
   pageLifetimes: {
     show() {
+      syncTabBar(this, 2);
+      const restoredResult = getStorage<CopywritingResult | null>('hshu_copy_result', null);
+      if (restoredResult) {
+        this.setData({
+          topic: restoredResult.title,
+          result: restoredResult,
+          favorited: false,
+        });
+        removeStorage('hshu_copy_result');
+        this.syncFavoriteStatus();
+        return;
+      }
+
       const seed = getStorage<string>('hshu_copy_seed', '');
       if (seed) {
         this.setData({ topic: seed });
@@ -70,7 +85,8 @@ Component({
           length: this.data.lengthValues[this.data.lengthIndex] as 'short' | 'medium' | 'long',
           includeTags: this.data.includeTags,
         });
-        this.setData({ result });
+        this.setData({ result, favorited: false });
+        this.syncFavoriteStatus();
       } catch (error) {
         const message = error instanceof Error ? error.message : '生成失败，请稍后重试';
         showToast(message);
@@ -98,7 +114,19 @@ Component({
         summary: result.body.slice(0, 80),
         payload: result,
       });
+      this.setData({ favorited: status.favorited });
       showToast(status.favorited ? '已收藏' : '已取消收藏', 'success');
+    },
+    async syncFavoriteStatus() {
+      const result = this.data.result;
+      if (!result) {
+        this.setData({ favorited: false });
+        return;
+      }
+
+      this.setData({
+        favorited: await check('copywriting', result.recordId),
+      });
     },
   },
 });

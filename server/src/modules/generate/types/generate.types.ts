@@ -1,6 +1,13 @@
+export interface GenerateQuota {
+  used: number;
+  limit: number;
+  remaining: number;
+}
+
 export interface TitleGenerateResult {
   recordId: string;
   titles: string[];
+  quota: GenerateQuota;
 }
 
 export interface CopywritingGenerateResult {
@@ -9,6 +16,13 @@ export interface CopywritingGenerateResult {
   body: string;
   tags: string[];
   imageSuggestions: string[];
+  quota: GenerateQuota;
+}
+
+export interface GenerateQuotaResult {
+  watermark: GenerateQuota;
+  title: GenerateQuota;
+  copywriting: GenerateQuota;
 }
 
 export interface TitleAiResponse {

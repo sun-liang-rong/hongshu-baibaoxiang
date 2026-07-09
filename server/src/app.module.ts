@@ -8,7 +8,6 @@ import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 import { HealthModule } from './modules/health/health.module';
 import { AuthModule } from './modules/auth/auth.module';
-import { UsersModule } from './modules/users/users.module';
 import { WatermarkModule } from './modules/watermark/watermark.module';
 import { GenerateModule } from './modules/generate/generate.module';
 import { HistoryModule } from './modules/history/history.module';
@@ -32,7 +31,6 @@ import { AiProviderIntegrationModule } from './integrations/ai-provider/ai-provi
     AiProviderIntegrationModule,
     HealthModule,
     AuthModule,
-    UsersModule,
     WatermarkModule,
     GenerateModule,
     HistoryModule,

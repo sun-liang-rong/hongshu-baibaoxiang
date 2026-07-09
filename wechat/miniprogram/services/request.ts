@@ -1,6 +1,6 @@
 import { getBaseURL, isMockMode } from '../config/env';
 import { ApiResponse } from '../types/domain';
-import { getStorage } from '../utils/storage';
+import { ensureOpenid, getOpenid } from './auth';
 
 interface RequestOptions {
   url: string;
@@ -10,10 +10,13 @@ interface RequestOptions {
   loadingText?: string;
 }
 
-export const request = <T>(options: RequestOptions): Promise<T> => {
+export const request = async <T>(options: RequestOptions): Promise<T> => {
   if (isMockMode()) {
     return Promise.reject(new Error(`Mock mode has no remote route: ${options.url}`));
   }
+
+  const openid = options.auth ? await ensureOpenid() : getOpenid();
+  const method = (options.method === 'PATCH' ? 'PUT' : options.method || 'GET') as WechatMiniprogram.RequestOption['method'];
 
   if (options.loadingText) {
     wx.showLoading({
@@ -22,9 +25,6 @@ export const request = <T>(options: RequestOptions): Promise<T> => {
     });
   }
 
-  const token = getStorage<string>('hshu_token', '');
-  const method = (options.method === 'PATCH' ? 'PUT' : options.method || 'GET') as WechatMiniprogram.RequestOption['method'];
-
   return new Promise<T>((resolve, reject) => {
     wx.request<ApiResponse<T>>({
       url: `${getBaseURL()}${options.url}`,
@@ -32,7 +32,7 @@ export const request = <T>(options: RequestOptions): Promise<T> => {
       data: options.data as string | WechatMiniprogram.IAnyObject | ArrayBuffer | undefined,
       header: {
         'content-type': 'application/json',
-        ...(options.auth && token ? { Authorization: `Bearer ${token}` } : {}),
+        ...(openid ? { 'x-openid': openid } : {}),
       },
       success: (res) => {
         const body = res.data;

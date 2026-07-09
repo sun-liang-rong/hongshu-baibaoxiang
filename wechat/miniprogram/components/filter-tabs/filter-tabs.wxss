@@ -1,0 +1,27 @@
+.filter-row {
+  display: flex;
+  gap: 12rpx;
+  padding: 22rpx 24rpx 12rpx;
+  overflow-x: auto;
+}
+
+.filter {
+  flex: none;
+  min-height: 60rpx;
+  padding: 0 22rpx;
+  border: 1rpx solid var(--line);
+  border-radius: 999rpx;
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--ink-soft);
+  font-size: 25rpx;
+  font-weight: 900;
+  line-height: 60rpx;
+  box-shadow: 0 8rpx 22rpx rgba(54, 39, 45, 0.035);
+}
+
+.filter--active {
+  border-color: var(--xhs-red);
+  background: var(--xhs-red);
+  color: #ffffff;
+  box-shadow: 0 12rpx 28rpx rgba(255, 36, 66, 0.22);
+}

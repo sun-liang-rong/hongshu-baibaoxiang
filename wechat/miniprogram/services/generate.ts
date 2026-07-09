@@ -1,5 +1,5 @@
 import { isMockMode } from '../config/env';
-import { CopywritingResult } from '../types/domain';
+import { CopywritingResult, GenerateQuotaResult } from '../types/domain';
 import { addHistory, createCopywritingResult } from './mock-store';
 import { request } from './request';
 
@@ -89,3 +89,18 @@ export const copywriting = (input: CopywritingInput): Promise<CopywritingResult>
   });
 };
 
+export const getGenerateQuota = (): Promise<GenerateQuotaResult> => {
+  if (isMockMode()) {
+    return Promise.resolve({
+      watermark: { used: 0, limit: 20, remaining: 20 },
+      title: { used: 0, limit: 10, remaining: 10 },
+      copywriting: { used: 0, limit: 5, remaining: 5 },
+    });
+  }
+
+  return request<GenerateQuotaResult>({
+    url: '/generate/quota',
+    method: 'GET',
+    auth: true,
+  });
+};

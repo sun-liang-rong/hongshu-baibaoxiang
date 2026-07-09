@@ -31,6 +31,9 @@ export const TITLE_STYLES = [
   '数字清单',
 ] as const;
 
+export const DEFAULT_TITLE_COUNT = 3;
+export const MAX_TITLE_COUNT = 3;
+
 export class GenerateTitlesDto {
   @ApiProperty({
     description: '标题主题',
@@ -69,14 +72,14 @@ export class GenerateTitlesDto {
 
   @ApiPropertyOptional({
     description: '生成数量',
-    example: 10,
+    example: DEFAULT_TITLE_COUNT,
     minimum: 1,
-    maximum: 20,
+    maximum: MAX_TITLE_COUNT,
   })
   @IsOptional()
   @IsInt()
   @Min(1)
-  @Max(20)
+  @Max(MAX_TITLE_COUNT)
   count?: number;
 
   @ApiPropertyOptional({

@@ -18,8 +18,13 @@ Component({
       const result = getStorage<WatermarkResult | null>('hshu_latest_watermark', null);
       this.setData({
         result,
-        favorited: result ? check('watermark', result.id) : false,
+        favorited: false,
       });
+      if (result) {
+        Promise.resolve(check('watermark', result.id)).then((favorited) => {
+          this.setData({ favorited });
+        });
+      }
     },
   },
   methods: {
@@ -56,20 +61,6 @@ Component({
         fail: () => showToast('图片下载失败'),
         complete: () => wx.hideLoading(),
       });
-    },
-    openVideoFullscreen() {
-      const result = this.data.result;
-      if (!result || !result.videoUrl) {
-        showToast('暂无视频可播放');
-        return;
-      }
-
-      try {
-        const videoContext = wx.createVideoContext('watermarkVideo', this);
-        videoContext.requestFullScreen({ direction: 90 });
-      } catch {
-        showToast('无法进入全屏，请稍后重试');
-      }
     },
     saveVideo() {
       const result = this.data.result;

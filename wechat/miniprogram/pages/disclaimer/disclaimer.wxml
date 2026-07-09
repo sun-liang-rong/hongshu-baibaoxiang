@@ -1,4 +1,4 @@
-<navigation-bar title="免责声明" color="#1f1f1f" background="#ffffff"></navigation-bar>
+<navigation-bar title="免责声明" color="#25232a" background="transparent"></navigation-bar>
 <scroll-view class="page-scroll" scroll-y type="list">
   <view class="doc-page">
     <view class="doc-card">
