@@ -11,13 +11,13 @@ page {
 }
 
 .list-scroll {
-  padding: 0 30rpx 172rpx;
+  padding: 0 30rpx calc(env(safe-area-inset-bottom) + 56rpx);
   box-sizing: border-box;
 }
 
 .clear-button {
   min-height: 74rpx;
-  margin: 24rpx 0 40rpx;
+  margin: 24rpx 0 16rpx;
   border: 0;
   border-radius: 999rpx;
   background: rgba(255, 255, 255, 0.7);
@@ -30,7 +30,7 @@ page {
 
 .load-more-button {
   min-height: 72rpx;
-  margin: 22rpx 0 0;
+  margin: 22rpx 0 16rpx;
   border: 0;
   border-radius: 999rpx;
   background: rgba(255, 255, 255, 0.72);
