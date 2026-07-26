@@ -16,7 +16,7 @@ export class WatermarkController {
   }
 
   @Post('parse')
-  @ApiOperation({ summary: '解析红薯无水印素材' })
+  @ApiOperation({ summary: '解析平台无水印素材' })
   parse(@Body() dto: ParseWatermarkDto, @CurrentOpenid() openid: string) {
     return this.watermarkService.parse(dto, openid);
   }

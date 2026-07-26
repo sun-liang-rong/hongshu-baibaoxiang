@@ -1,4 +1,5 @@
 <navigation-bar title="历史记录" color="#25232a" background="transparent"></navigation-bar>
+<network-status></network-status>
 <view class="page">
   <filter-tabs filters="{{filters}}" active="{{activeType}}" bind:change="switchType"></filter-tabs>
 
@@ -9,7 +10,21 @@
     lower-threshold="120"
     bindscrolltolower="loadMore"
   >
-    <block wx:if="{{items.length}}">
+    <view wx:if="{{loading && !items.length}}" class="skeleton-list">
+      <view wx:for="{{skeletonItems}}" wx:key="*this" class="skeleton-card">
+        <view class="skeleton-line skeleton-line--meta"></view>
+        <view class="skeleton-line skeleton-line--title"></view>
+        <view class="skeleton-line skeleton-line--body"></view>
+      </view>
+    </view>
+    <empty-state
+      wx:elif="{{loadError && !items.length}}"
+      title="加载失败"
+      desc="{{loadError}}"
+      action-text="重新加载"
+      bind:action="retry"
+    ></empty-state>
+    <block wx:elif="{{items.length}}">
       <record-card
         wx:for="{{items}}"
         wx:key="id"
@@ -26,8 +41,14 @@
       >
         加载更多
       </button>
-      <button class="clear-button" bindtap="clearAll">清空记录</button>
+      <button class="clear-button" bindtap="clearAll">清空当前记录</button>
     </block>
-    <empty-state wx:else title="暂无历史记录" desc="使用去水印、标题生成或文案生成后会自动保存"></empty-state>
+    <empty-state
+      wx:else
+      title="暂无历史记录"
+      desc="使用去水印、标题或文案工具后会自动保存"
+      action-text="去使用工具"
+      bind:action="createContent"
+    ></empty-state>
   </scroll-view>
 </view>

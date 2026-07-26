@@ -1,11 +1,16 @@
 import { syncTabBar } from '../../utils/tabbar';
 import { getGenerateQuota } from '../../services/generate';
+import {
+  buildSharePath,
+  enableShareMenu,
+  TOOLBOX_SHARE_TITLE,
+} from '../../utils/share';
 import { showToast } from '../../utils/ui';
 
 Component({
   data: {
-    avatarText: '红',
-    nickname: '红薯创作者',
+    quotaLoading: true,
+    quotaError: false,
     quotaStats: [
       { key: 'watermark', num: '--', label: '去水印剩余' },
       { key: 'title', num: '--', label: '标题剩余' },
@@ -21,11 +26,27 @@ Component({
   pageLifetimes: {
     show() {
       syncTabBar(this, 3);
+      enableShareMenu();
       this.loadQuota();
     },
   },
   methods: {
+    onShareAppMessage() {
+      return {
+        title: TOOLBOX_SHARE_TITLE,
+        path: buildSharePath('/pages/watermark/watermark', {
+          from: 'profile_share',
+        }),
+      };
+    },
+    onShareTimeline() {
+      return {
+        title: TOOLBOX_SHARE_TITLE,
+        query: 'from=profile_timeline',
+      };
+    },
     async loadQuota() {
+      this.setData({ quotaLoading: true, quotaError: false });
       try {
         const quota = await getGenerateQuota();
         this.setData({
@@ -46,10 +67,11 @@ Component({
               label: '文案剩余',
             },
           ],
+          quotaLoading: false,
         });
-      } catch (error) {
-        const message = error instanceof Error ? error.message : '次数加载失败';
-        showToast(message);
+      } catch {
+        this.setData({ quotaLoading: false, quotaError: true });
+        showToast('额度加载失败，请稍后重试');
       }
     },
     go(e: WechatMiniprogram.TouchEvent) {

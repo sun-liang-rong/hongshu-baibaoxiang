@@ -1,7 +1,18 @@
-import { isMockMode } from '../config/env';
-import { FavoriteItem, FavoritePayload, PaginatedResult, RecordType } from '../types/domain';
-import { deleteFavorite, isFavorited, listFavoritesPage, toggleFavorite } from './mock-store';
-import { request } from './request';
+import { isMockMode } from "../config/env";
+import {
+  FavoriteItem,
+  FavoritePayload,
+  PaginatedResult,
+  RecordType,
+} from "../types/domain";
+import {
+  deleteFavorite,
+  isFavorited,
+  listFavoritesPage,
+  toggleFavorite,
+} from "./mock-store";
+import { request } from "./request";
+import { normalizeWatermarkResult } from "./watermark";
 
 const PAGE_SIZE = 20;
 
@@ -16,23 +27,41 @@ export const list = (
 ): Promise<PaginatedResult<FavoriteItem>> => {
   const limit = options.limit || PAGE_SIZE;
   if (isMockMode()) {
-    return Promise.resolve(listFavoritesPage(type, options.cursor || '', limit));
+    return Promise.resolve(
+      normalizeWatermarkPage(
+        listFavoritesPage(type, options.cursor || "", limit),
+      ),
+    );
   }
 
   return request<PaginatedResult<FavoriteItem>>({
-    url: buildListUrl('/favorites', type, options.cursor, limit),
+    url: buildListUrl("/favorites", type, options.cursor, limit),
     auth: true,
-  });
+  }).then(normalizeWatermarkPage);
 };
 
-export const toggle = (item: FavoritePayload): Promise<{ favorited: boolean }> => {
+const normalizeWatermarkPage = (page: PaginatedResult<FavoriteItem>) => ({
+  ...page,
+  items: page.items.map((item) =>
+    item.type === "watermark"
+      ? {
+          ...item,
+          payload: normalizeWatermarkResult(item.payload),
+        }
+      : item,
+  ),
+});
+
+export const toggle = (
+  item: FavoritePayload,
+): Promise<{ favorited: boolean }> => {
   if (isMockMode()) {
     return Promise.resolve(toggleFavorite(item));
   }
 
   return request<{ favorited: boolean }>({
-    url: '/favorites',
-    method: 'POST',
+    url: "/favorites",
+    method: "POST",
     data: item,
     auth: true,
   });
@@ -46,7 +75,7 @@ export const remove = (id: string): Promise<void> => {
 
   return request<void>({
     url: `/favorites/${id}`,
-    method: 'DELETE',
+    method: "DELETE",
     auth: true,
   });
 };
@@ -76,5 +105,5 @@ const buildListUrl = (
     params.push(`cursor=${encodeURIComponent(cursor)}`);
   }
 
-  return `${path}?${params.join('&')}`;
+  return `${path}?${params.join("&")}`;
 };

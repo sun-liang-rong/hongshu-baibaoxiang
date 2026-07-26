@@ -63,9 +63,9 @@ describe('generate, favorite and history integration', () => {
           useValue: {
             get: jest.fn((key: string, defaultValue: number) => {
               const values: Record<string, number> = {
-                'generate.watermarkDailyLimit': 20,
-                'generate.titleDailyLimit': 10,
-                'generate.copywritingDailyLimit': 5,
+                'generate.watermarkDailyLimit': 1,
+                'generate.titleDailyLimit': 1,
+                'generate.copywritingDailyLimit': 1,
               };
               return values[key] ?? defaultValue;
             }),
@@ -129,8 +129,8 @@ describe('generate, favorite and history integration', () => {
         titles: ['夏季通勤穿搭公式', '普通人也能照搬的通勤穿搭'],
         quota: {
           used: 1,
-          limit: 10,
-          remaining: 9,
+          limit: 1,
+          remaining: 0,
         },
       },
     });
@@ -262,8 +262,8 @@ describe('generate, favorite and history integration', () => {
         imageSuggestions: ['全身通勤照', '面料细节图'],
         quota: {
           used: 1,
-          limit: 5,
-          remaining: 4,
+          limit: 1,
+          remaining: 0,
         },
       },
     });
@@ -311,7 +311,7 @@ describe('generate, favorite and history integration', () => {
   });
 
   it('blocks title generation when daily quota is exhausted', async () => {
-    for (let index = 0; index < 10; index += 1) {
+    for (let index = 0; index < 1; index += 1) {
       await prisma.generateRecord.create({
         data: {
           openid: 'openid-1',
@@ -335,19 +335,19 @@ describe('generate, favorite and history integration', () => {
           code: 0,
           data: {
             title: {
-              used: 10,
-              limit: 10,
+              used: 1,
+              limit: 1,
               remaining: 0,
             },
             watermark: {
               used: 0,
-              limit: 20,
-              remaining: 20,
+              limit: 1,
+              remaining: 1,
             },
             copywriting: {
               used: 0,
-              limit: 5,
-              remaining: 5,
+              limit: 1,
+              remaining: 1,
             },
           },
         });
@@ -365,6 +365,27 @@ describe('generate, favorite and history integration', () => {
       .expect(403);
 
     expect(aiProvider.generateJson).not.toHaveBeenCalled();
+  });
+
+  it('fails open when the database is unavailable during quota lookup', async () => {
+    prisma.generateRecord.count.mockRejectedValue(
+      new Error('database unavailable'),
+    );
+
+    await request(app.getHttpServer())
+      .get('/api/v1/generate/quota')
+      .set('x-openid', 'openid-1')
+      .expect(200)
+      .expect(({ body }) => {
+        expect(body).toMatchObject({
+          code: 0,
+          data: {
+            watermark: { used: 0, limit: 1, remaining: 1 },
+            title: { used: 0, limit: 1, remaining: 1 },
+            copywriting: { used: 0, limit: 1, remaining: 1 },
+          },
+        });
+      });
   });
 });
 

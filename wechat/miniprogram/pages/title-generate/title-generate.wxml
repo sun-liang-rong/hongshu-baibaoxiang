@@ -1,85 +1,164 @@
-<navigation-bar title="标题生成" back="{{false}}" color="#25232a" background="transparent"></navigation-bar>
-<scroll-view class="page-scroll" scroll-y type="list">
+<navigation-bar title="写标题" back="{{false}}" color="#ffffff" background="#ff2442"></navigation-bar>
+<network-status></network-status>
+<scroll-view
+  class="page-scroll"
+  scroll-y
+  scroll-with-animation
+  scroll-into-view="{{scrollIntoView}}"
+  type="list"
+>
   <view class="page-wrap">
-    <view class="page-head">
-      <view class="page-kicker">标题灵感</view>
-      <view class="page-title">把普通选题变成可点击标题</view>
-      <view class="page-subtitle">输入主题和目标人群，一次生成多条更像创作者笔记的标题。</view>
+    <view class="tool-intro">
+      <view class="tool-intro__main">
+        <view class="tool-title">这篇笔记想写什么？</view>
+        <view class="tool-subtitle">输入一个主题，直接生成标题</view>
+      </view>
+      <view wx:if="{{quotaReady}}" class="quota-text {{quota.remaining <= 0 ? 'quota-text--empty' : ''}}">
+        今日 {{quota.remaining}} 次
+      </view>
     </view>
     <view class="form-card">
-      <view class="form-head">
+      <view class="field">
+        <input class="input topic-input" value="{{topic}}" placeholder="例如：新手做红薯探店" bindinput="onTopicInput" />
+      </view>
+      <view
+        class="advanced-toggle"
+        hover-class="advanced-toggle--pressed"
+        aria-role="button"
+        aria-label="{{advancedOpen ? '收起更多设置' : '展开更多设置'}}"
+        bindtap="toggleAdvanced"
+      >
         <view>
-          <view class="panel-title">创作配置</view>
-          <view class="panel-subtitle">先确定内容方向，再选择标题语气。</view>
+          <view class="advanced-toggle__title">更多设置</view>
+          <view class="advanced-toggle__desc">{{contentTypes[contentTypeIndex]}} · {{styles[styleIndex]}} · {{counts[countIndex]}} 条</view>
         </view>
-        <view class="panel-badge">Title</view>
+        <text class="advanced-toggle__action">{{advancedOpen ? '收起' : '调整'}}</text>
       </view>
-      <view class="field">
-        <view class="field__label">标题主题</view>
-        <view class="field__hint">越具体越容易生成有画面感的标题。</view>
-        <input class="input" value="{{topic}}" placeholder="例如：新手做红薯探店" bindinput="onTopicInput" />
-      </view>
-      <view class="field">
-        <view class="field__label">目标人群</view>
-        <input class="input" value="{{audience}}" placeholder="例如：本地生活商家、新手博主" bindinput="onAudienceInput" />
-      </view>
-      <view class="picker-grid">
-        <picker mode="selector" range="{{contentTypes}}" value="{{contentTypeIndex}}" bindchange="onContentTypeChange">
-          <view class="picker-box">
-            <view>
-              <text class="picker-box__label">内容类型</text>
-              <text class="picker-box__value">{{contentTypes[contentTypeIndex]}}</text>
+      <view wx:if="{{advancedOpen}}" class="advanced-field">
+        <view class="field">
+          <view class="field__label">目标人群</view>
+          <input class="input" value="{{audience}}" placeholder="选填，例如：新手博主" bindinput="onAudienceInput" />
+        </view>
+        <view class="picker-grid">
+          <picker mode="selector" range="{{contentTypes}}" value="{{contentTypeIndex}}" bindchange="onContentTypeChange">
+            <view class="picker-box">
+              <view>
+                <text class="picker-box__label">内容类型</text>
+                <text class="picker-box__value">{{contentTypes[contentTypeIndex]}}</text>
+              </view>
+              <text class="picker-box__chevron">⌄</text>
             </view>
-            <text class="picker-box__chevron">⌄</text>
-          </view>
-        </picker>
-        <picker mode="selector" range="{{styles}}" value="{{styleIndex}}" bindchange="onStyleChange">
-          <view class="picker-box">
-            <view>
-              <text class="picker-box__label">标题风格</text>
-              <text class="picker-box__value">{{styles[styleIndex]}}</text>
+          </picker>
+          <picker mode="selector" range="{{styles}}" value="{{styleIndex}}" bindchange="onStyleChange">
+            <view class="picker-box">
+              <view>
+                <text class="picker-box__label">标题风格</text>
+                <text class="picker-box__value">{{styles[styleIndex]}}</text>
+              </view>
+              <text class="picker-box__chevron">⌄</text>
             </view>
-            <text class="picker-box__chevron">⌄</text>
-          </view>
-        </picker>
-        <picker mode="selector" range="{{counts}}" value="{{countIndex}}" bindchange="onCountChange">
-          <view class="picker-box">
-            <view>
-              <text class="picker-box__label">生成数量</text>
-              <text class="picker-box__value">{{counts[countIndex]}} 条</text>
+          </picker>
+        </view>
+        <view class="count-selector">
+          <view class="count-selector__label">生成数量</view>
+          <view class="count-selector__options">
+            <view
+              wx:for="{{counts}}"
+              wx:key="*this"
+              class="count-option {{countIndex === index ? 'count-option--active' : ''}}"
+              hover-class="count-option--pressed"
+              aria-role="button"
+              aria-label="生成 {{item}} 条标题"
+              data-index="{{index}}"
+              bindtap="selectCount"
+            >
+              {{item}} 条
             </view>
-            <text class="picker-box__chevron">⌄</text>
           </view>
-        </picker>
+        </view>
       </view>
-      <button class="button button--primary cta-button" loading="{{loading}}" bindtap="generate">生成标题</button>
+      <button
+        class="button button--primary cta-button {{loading ? 'button--loading' : ''}}"
+        loading="{{loading}}"
+        disabled="{{loading || (quotaReady && quota.remaining <= 0)}}"
+        bindtap="generate"
+      >
+        {{quotaReady && quota.remaining <= 0 ? '今日次数已用完' : '生成标题'}}
+      </button>
+      <view wx:if="{{requestError}}" class="request-error" aria-role="alert">
+        <view class="request-error__main">
+          <view class="request-error__title">标题生成没有完成</view>
+          <view class="request-error__desc">{{requestError}}，创作配置已保留</view>
+        </view>
+        <button class="request-error__retry" bindtap="retryRequest">重新尝试</button>
+      </view>
     </view>
 
-    <view class="result-section">
+    <view wx:if="{{generatedTitles.length}}" id="title-result" class="result-section">
       <view class="result-head">
-        <view>
-          <view class="section-title">标题工作区</view>
+        <view class="result-head__title-row">
+          <view class="result-head__title-group">
+            <view class="section-title">标题工作区</view>
+            <view class="result-count">{{generatedTitles.length}} 条</view>
+          </view>
+          <button
+            class="copy-all-button"
+            hover-class="copy-all-button--pressed"
+            aria-label="复制全部标题"
+            bindtap="copyAll"
+          >
+            <view class="copy-all-button__icon" aria-hidden="true">
+              <view class="copy-all-button__icon-back"></view>
+              <view class="copy-all-button__icon-front"></view>
+            </view>
+            <text>复制全部</text>
+          </button>
+          <button
+            class="share-result-button"
+            open-type="share"
+            hover-class="share-result-button--pressed"
+            aria-label="分享当前标题主题"
+          >分享主题</button>
+        </view>
+        <view class="result-head__description">
           <view class="section-subtitle">复制可直接发布，收藏后可在「我的」里找回。</view>
         </view>
-        <view wx:if="{{generatedTitles.length}}" class="result-count">{{generatedTitles.length}} 条</view>
       </view>
-      <block wx:if="{{generatedTitles.length}}">
-        <view wx:for="{{generatedTitles}}" wx:key="refId" class="title-item">
+      <view wx:for="{{generatedTitles}}" wx:key="refId" class="title-item">
+        <view class="title-item__main">
+          <view class="title-item__index">{{index + 1}}</view>
           <view class="title-item__text">{{item.text}}</view>
-          <view class="title-item__actions">
-            <button bindtap="copy" data-title="{{item.text}}">复制</button>
-            <button
-              class="{{item.favorited ? 'favorited' : ''}}"
-              bindtap="favorite"
-              data-ref-id="{{item.refId}}"
-            >
-              {{item.favorited ? '已收藏' : '收藏'}}
-            </button>
-          </view>
         </view>
-        <button class="button button--ghost refresh-button" loading="{{loading}}" bindtap="generate">换一批</button>
-      </block>
-      <empty-state wx:else title="还没有生成标题" desc="输入主题后，一次生成多条红薯风格标题"></empty-state>
+        <view class="title-item__actions">
+          <button hover-class="action-button--pressed" aria-label="复制标题" bindtap="copy" data-title="{{item.text}}">复制</button>
+          <button
+            class="{{item.favorited ? 'favorited' : ''}}"
+            hover-class="action-button--pressed"
+            aria-label="{{item.favorited ? '取消收藏标题' : '收藏标题'}}"
+            bindtap="favorite"
+            data-ref-id="{{item.refId}}"
+          >
+            {{item.favorited ? '已收藏' : '收藏'}}
+          </button>
+        </view>
+      </view>
+      <view
+        wx:if="{{quotaReady && quota.remaining <= 0}}"
+        class="quota-tip"
+        aria-label="今日生成次数已用完，明日可再生成"
+      >
+        <view class="quota-tip__icon">i</view>
+        <text>今日生成次数已用完，明日可再生成</text>
+      </view>
+      <button
+        wx:else
+        class="button button--ghost refresh-button {{loading ? 'button--loading' : ''}}"
+        loading="{{loading}}"
+        disabled="{{loading}}"
+        bindtap="generate"
+      >
+        换一批
+      </button>
     </view>
   </view>
 </scroll-view>

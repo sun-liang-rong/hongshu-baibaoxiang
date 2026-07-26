@@ -1,4 +1,5 @@
 import { clear, list, remove } from '../../services/history';
+import { getWatermarkDescription } from '../../services/watermark';
 import { CopywritingResult, HistoryItem, RecordType, WatermarkResult } from '../../types/domain';
 import { formatDateTime, typeLabel } from '../../utils/format';
 import { setStorage } from '../../utils/storage';
@@ -25,6 +26,8 @@ Component({
     hasMore: false,
     loading: false,
     loadingMore: false,
+    loadError: '',
+    skeletonItems: [1, 2, 3],
   },
   pageLifetimes: {
     show() {
@@ -50,6 +53,7 @@ Component({
       this.setData({
         loading: !append,
         loadingMore: append,
+        ...(!append ? { loadError: '' } : {}),
       });
 
       try {
@@ -64,7 +68,11 @@ Component({
         });
       } catch (error) {
         const message = error instanceof Error ? error.message : '历史记录加载失败';
-        showToast(message);
+        if (append) {
+          showToast(message);
+        } else {
+          this.setData({ loadError: message });
+        }
       } finally {
         this.setData({
           loading: false,
@@ -83,6 +91,17 @@ Component({
     },
     loadMore() {
       this.load(true);
+    },
+    retry() {
+      this.load();
+    },
+    createContent() {
+      const routes: Record<string, string> = {
+        watermark: '/pages/watermark/watermark',
+        title: '/pages/title-generate/title-generate',
+        copywriting: '/pages/copywriting-generate/copywriting-generate',
+      };
+      wx.switchTab({ url: routes[this.data.activeType] || '/pages/watermark/watermark' });
     },
     open(e: WechatMiniprogram.CustomEvent) {
       const id = (e.detail as { id: string }).id;
@@ -117,7 +136,15 @@ Component({
         return;
       }
 
-      copyText(item.summary || item.title);
+      if (item.type === 'watermark') {
+        copyText(
+          getWatermarkDescription(item.payload as WatermarkResult) ||
+            item.summary,
+        );
+        return;
+      }
+
+      copyText(this.formatCopywriting(item.payload as CopywritingResult));
     },
     async remove(e: WechatMiniprogram.CustomEvent) {
       const id = (e.detail as { id: string }).id;
@@ -144,6 +171,10 @@ Component({
         label: typeLabel(item.type),
         time: formatDateTime(item.createdAt),
       };
+    },
+    formatCopywriting(result: CopywritingResult) {
+      const tags = (result.tags || []).map((tag) => `#${tag}`).join(' ');
+      return [result.title, result.body, tags].filter(Boolean).join('\n\n');
     },
   },
 });

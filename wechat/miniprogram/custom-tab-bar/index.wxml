@@ -4,14 +4,17 @@
       wx:for="{{list}}"
       wx:key="pagePath"
       class="tab-item {{selected === index ? 'tab-item--active' : ''}}"
+      hover-class="tab-item--pressed"
+      aria-role="button"
+      aria-label="{{item.text}}"
       data-path="{{item.pagePath}}"
       data-index="{{index}}"
       bindtap="switchTab"
     >
       <view class="tab-icon">
-        <image src="{{selected === index ? item.selectedIconPath : item.iconPath}}" mode="aspectFit"></image>
+        <image class="tab-icon__image" src="{{selected === index ? item.selectedIconPath : item.iconPath}}" mode="aspectFit"></image>
       </view>
-      <text>{{item.text}}</text>
+      <text class="tab-label">{{item.text}}</text>
     </view>
   </view>
 </view>

@@ -8,6 +8,7 @@ interface RequestOptions {
   data?: unknown;
   auth?: boolean;
   loadingText?: string;
+  timeout?: number;
 }
 
 export const request = async <T>(options: RequestOptions): Promise<T> => {
@@ -34,6 +35,7 @@ export const request = async <T>(options: RequestOptions): Promise<T> => {
         'content-type': 'application/json',
         ...(openid ? { 'x-openid': openid } : {}),
       },
+      timeout: options.timeout ?? 15000,
       success: (res) => {
         const body = res.data;
         if (body && body.code === 0) {
@@ -43,7 +45,18 @@ export const request = async <T>(options: RequestOptions): Promise<T> => {
 
         reject(new Error(body?.message || '请求失败'));
       },
-      fail: () => reject(new Error('网络异常，请检查网络后重试')),
+      fail: (error) => {
+        const message = error.errMsg || '';
+        if (/timeout/i.test(message)) {
+          reject(new Error('请求超时，请重新尝试'));
+          return;
+        }
+        if (/network|offline|fail/i.test(message)) {
+          reject(new Error('网络不可用，请恢复网络后重试'));
+          return;
+        }
+        reject(new Error('请求失败，请稍后重试'));
+      },
       complete: () => {
         if (options.loadingText) {
           wx.hideLoading();

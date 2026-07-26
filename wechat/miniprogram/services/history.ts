@@ -1,7 +1,8 @@
-import { isMockMode } from '../config/env';
-import { HistoryItem, PaginatedResult, RecordType } from '../types/domain';
-import { clearHistory, deleteHistory, listHistoryPage } from './mock-store';
-import { request } from './request';
+import { isMockMode } from "../config/env";
+import { HistoryItem, PaginatedResult, RecordType } from "../types/domain";
+import { clearHistory, deleteHistory, listHistoryPage } from "./mock-store";
+import { request } from "./request";
+import { normalizeWatermarkResult } from "./watermark";
 
 const PAGE_SIZE = 20;
 
@@ -16,14 +17,30 @@ export const list = (
 ): Promise<PaginatedResult<HistoryItem>> => {
   const limit = options.limit || PAGE_SIZE;
   if (isMockMode()) {
-    return Promise.resolve(listHistoryPage(type, options.cursor || '', limit));
+    return Promise.resolve(
+      normalizeWatermarkPage(
+        listHistoryPage(type, options.cursor || "", limit),
+      ),
+    );
   }
 
   return request<PaginatedResult<HistoryItem>>({
-    url: buildListUrl('/history', type, options.cursor, limit),
+    url: buildListUrl("/history", type, options.cursor, limit),
     auth: true,
-  });
+  }).then(normalizeWatermarkPage);
 };
+
+const normalizeWatermarkPage = (page: PaginatedResult<HistoryItem>) => ({
+  ...page,
+  items: page.items.map((item) =>
+    item.type === "watermark"
+      ? {
+          ...item,
+          payload: normalizeWatermarkResult(item.payload),
+        }
+      : item,
+  ),
+});
 
 export const remove = (id: string): Promise<void> => {
   if (isMockMode()) {
@@ -33,7 +50,7 @@ export const remove = (id: string): Promise<void> => {
 
   return request<void>({
     url: `/history/${id}`,
-    method: 'DELETE',
+    method: "DELETE",
     auth: true,
   });
 };
@@ -52,7 +69,7 @@ const buildListUrl = (
     params.push(`cursor=${encodeURIComponent(cursor)}`);
   }
 
-  return `${path}?${params.join('&')}`;
+  return `${path}?${params.join("&")}`;
 };
 
 export const clear = (type?: RecordType): Promise<void> => {
@@ -62,8 +79,8 @@ export const clear = (type?: RecordType): Promise<void> => {
   }
 
   return request<void>({
-    url: type ? `/history?type=${type}` : '/history',
-    method: 'DELETE',
+    url: type ? `/history?type=${type}` : "/history",
+    method: "DELETE",
     auth: true,
   });
 };

@@ -1,0 +1,5 @@
+<view wx:if="{{!online}}" class="network-banner" aria-role="alert">
+  <view class="network-banner__dot"></view>
+  <view class="network-banner__text">网络已断开，填写内容会保留</view>
+  <button class="network-banner__retry" loading="{{checking}}" disabled="{{checking}}" bindtap="checkNetwork">重新检测</button>
+</view>

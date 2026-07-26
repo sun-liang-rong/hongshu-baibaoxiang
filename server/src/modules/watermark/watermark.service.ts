@@ -2,19 +2,22 @@ import {
   BadRequestException,
   ForbiddenException,
   Injectable,
+  Logger,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { GenerateStatus, GenerateType } from '@prisma/client/index';
 import { PrismaService } from '../../database/prisma.service';
+import { WatermarkParserIntegrationService } from '../../integrations/watermark-parser/watermark-parser-integration.service';
 import { HistoryService } from '../history/history.service';
 import { ParseWatermarkDto } from './dto/parse-watermark.dto';
-import { WatermarkPlatformResolver } from './watermark-platform.resolver';
 import { WatermarkParseResponse } from './watermark.types';
 
 @Injectable()
 export class WatermarkService {
+  private readonly logger = new Logger(WatermarkService.name);
+
   constructor(
-    private readonly platformResolver: WatermarkPlatformResolver,
+    private readonly watermarkParser: WatermarkParserIntegrationService,
     private readonly prisma?: PrismaService,
     private readonly configService?: ConfigService,
     private readonly historyService?: HistoryService,
@@ -30,18 +33,25 @@ export class WatermarkService {
       };
     }
 
-    const [start, end] = this.getTodayRange();
-    const used = await this.prisma.generateRecord.count({
-      where: {
-        openid,
-        type: GenerateType.watermark,
-        status: GenerateStatus.success,
-        createdAt: {
-          gte: start,
-          lt: end,
+    let used = 0;
+    try {
+      const [start, end] = this.getTodayRange();
+      used = await this.prisma.generateRecord.count({
+        where: {
+          openid,
+          type: GenerateType.watermark,
+          status: GenerateStatus.success,
+          createdAt: {
+            gte: start,
+            lt: end,
+          },
         },
-      },
-    });
+      });
+    } catch (error) {
+      this.logger.warn(
+        `去水印额度查询失败，临时按未使用处理：${this.toErrorMessage(error)}`,
+      );
+    }
 
     return {
       used,
@@ -56,28 +66,10 @@ export class WatermarkService {
   ): Promise<WatermarkParseResponse> {
     await this.assertQuotaAvailable(openid);
 
-    const source = this.platformResolver.resolve(dto.source, dto.text);
-
     try {
-      const parser = this.platformResolver.getParser(source);
-      const parsed = await parser.parse(dto.text);
-      const id = this.buildId(source, parsed.noteId, parsed.finalUrl);
-      const result: WatermarkParseResponse = {
-        id,
-        source,
-        sourceUrl: parsed.sourceUrl,
-        finalUrl: parsed.finalUrl,
-        noteId: parsed.noteId,
-        title: parsed.title,
-        content: parsed.content,
-        type: this.normalizeType(parsed.type, parsed.videoUrl),
-        images: parsed.images.map((image) => ({ ...image })),
-        coverUrl: this.getOptionalString(parsed, 'coverUrl'),
-        videoUrl: parsed.videoUrl,
-        musicUrl: this.getOptionalString(parsed, 'musicUrl'),
-        status: 'success',
-        createdAt: new Date().toISOString(),
-      };
+      const remoteResult = await this.watermarkParser.parse(dto.text);
+      const result: WatermarkParseResponse = { ...remoteResult };
+      const source = result.data.platform || dto.source || 'unknown';
 
       const saved = await this.saveHistorySafely(
         openid,
@@ -94,22 +86,6 @@ export class WatermarkService {
     }
   }
 
-  private getOptionalString(input: unknown, key: string) {
-    if (!input || typeof input !== 'object' || !(key in input)) {
-      return '';
-    }
-
-    const value = (input as Record<string, unknown>)[key];
-    return typeof value === 'string' ? value : '';
-  }
-
-  private normalizeType(
-    type: string,
-    videoUrl: string,
-  ): WatermarkParseResponse['type'] {
-    return type === 'video' || videoUrl ? 'video' : 'image';
-  }
-
   private async saveHistorySafely(
     openid: string | undefined,
     source: string,
@@ -124,17 +100,21 @@ export class WatermarkService {
       await this.historyService.save({
         openid,
         type: GenerateType.watermark,
-        topic: result.title || result.noteId || source,
+        topic: result.data.title || result.data.id || source,
         input: {
           text,
           source,
         },
         output: result,
-        title: result.title || '去水印解析结果',
-        summary: result.content.slice(0, 120),
+        title: result.data.title || '去水印解析结果',
+        summary: (result.data.description || result.data.title || '').slice(
+          0,
+          120,
+        ),
       });
       return true;
-    } catch {
+    } catch (error) {
+      this.logger.warn(`去水印记录保存失败：${this.toErrorMessage(error)}`);
       return false;
     }
   }
@@ -152,7 +132,9 @@ export class WatermarkService {
   }
 
   private getDailyLimit() {
-    return this.configService?.get<number>('generate.watermarkDailyLimit', 20) ?? 20;
+    return (
+      this.configService?.get<number>('generate.watermarkDailyLimit', 1) ?? 1
+    );
   }
 
   private getTodayRange() {
@@ -174,11 +156,7 @@ export class WatermarkService {
     return [start, end] as const;
   }
 
-  private buildId(source: string, noteId: string, finalUrl: string) {
-    if (noteId) {
-      return `${source}_${noteId}`;
-    }
-
-    return `${source}_${Buffer.from(finalUrl).toString('base64url').slice(0, 16)}`;
+  private toErrorMessage(error: unknown) {
+    return error instanceof Error ? error.message : String(error);
   }
 }

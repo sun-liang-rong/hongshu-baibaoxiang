@@ -1,33 +1,51 @@
-<navigation-bar title="我的" back="{{false}}" color="#25232a" background="transparent"></navigation-bar>
+<navigation-bar title="我的" back="{{false}}" color="#ffffff" background="#ff2442"></navigation-bar>
+<network-status></network-status>
 <scroll-view class="page-scroll" scroll-y type="list">
   <view class="profile">
     <view class="user-card">
-      <view class="avatar">{{avatarText}}</view>
+      <view class="brand-mark">宝</view>
       <view class="user-card__main">
-        <view class="nickname">{{nickname}}</view>
-        <view class="subtext">免费工具 MVP 版本</view>
+        <view class="brand-name">红薯百宝箱</view>
+        <view class="subtext">去水印、标题和文案创作工具</view>
       </view>
     </view>
 
-    <view class="stat-row">
-      <view wx:for="{{quotaStats}}" wx:key="key" class="stat-item stat-item--{{item.key}}">
-        <view class="stat-item__num">{{item.num}}</view>
-        <view class="stat-item__label">{{item.label}}</view>
+    <view class="quota-card">
+      <view class="quota-card__head">
+        <view>
+          <view class="quota-card__title">今日免费额度</view>
+          <view class="quota-card__desc">各项额度以当前后端配置为准</view>
+        </view>
+        <button wx:if="{{quotaError}}" class="quota-retry" bindtap="loadQuota">重试</button>
+      </view>
+      <view class="stat-row">
+        <view wx:for="{{quotaStats}}" wx:key="key" class="stat-item stat-item--{{item.key}}">
+          <view class="stat-item__num">{{quotaLoading ? '···' : item.num}}</view>
+          <view class="stat-item__label">{{item.label}}</view>
+        </view>
       </view>
     </view>
 
     <view class="link-list">
-      <view wx:for="{{links}}" wx:key="title" class="link-item" bindtap="go" data-url="{{item.url}}">
-        <view>
+      <view wx:for="{{links}}" wx:key="title" class="link-item" hover-class="link-item--pressed" bindtap="go" data-url="{{item.url}}">
+        <view class="link-item__main">
           <view class="link-item__title">{{item.title}}</view>
           <view class="link-item__desc">{{item.desc}}</view>
         </view>
         <view class="link-item__arrow">›</view>
       </view>
+      <view class="link-item link-item--share">
+        <view class="link-item__main">
+          <view class="link-item__title">分享给朋友</view>
+          <view class="link-item__desc">把红薯百宝箱推荐给需要的人</view>
+        </view>
+        <view class="link-item__arrow">›</view>
+        <button class="link-item__share-hit" open-type="share" aria-label="分享红薯百宝箱给朋友"></button>
+      </view>
     </view>
 
     <view class="about-box">
-      今日次数会在每天 00:00 后恢复，具体额度以后台配置为准。
+      今日免费次数会在北京时间 00:00 后恢复，具体额度以页面显示为准。
     </view>
   </view>
 </scroll-view>

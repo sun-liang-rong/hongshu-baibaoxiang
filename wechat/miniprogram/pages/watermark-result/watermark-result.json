@@ -2,7 +2,7 @@
   "usingComponents": {
     "navigation-bar": "/components/navigation-bar/navigation-bar",
     "empty-state": "/components/empty-state/empty-state",
-    "status-pill": "/components/status-pill/status-pill"
+    "status-pill": "/components/status-pill/status-pill",
+    "network-status": "/components/network-status/network-status"
   }
 }
-

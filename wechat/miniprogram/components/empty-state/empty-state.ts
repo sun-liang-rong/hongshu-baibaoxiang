@@ -8,6 +8,14 @@ Component({
       type: String,
       value: '',
     },
+    actionText: {
+      type: String,
+      value: '',
+    },
+  },
+  methods: {
+    action() {
+      this.triggerEvent('action');
+    },
   },
 });
-

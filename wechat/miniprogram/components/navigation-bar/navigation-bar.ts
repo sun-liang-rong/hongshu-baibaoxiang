@@ -16,11 +16,11 @@ Component({
     },
     background: {
       type: String,
-      value: ''
+      value: 'transparent'
     },
     color: {
       type: String,
-      value: ''
+      value: '#25232a'
     },
     back: {
       type: Boolean,

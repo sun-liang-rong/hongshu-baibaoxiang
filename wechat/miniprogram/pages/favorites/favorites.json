@@ -3,6 +3,7 @@
     "navigation-bar": "/components/navigation-bar/navigation-bar",
     "empty-state": "/components/empty-state/empty-state",
     "filter-tabs": "/components/filter-tabs/filter-tabs",
-    "record-card": "/components/record-card/record-card"
+    "record-card": "/components/record-card/record-card",
+    "network-status": "/components/network-status/network-status"
   }
 }

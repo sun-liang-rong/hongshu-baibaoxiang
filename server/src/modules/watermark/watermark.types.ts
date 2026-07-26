@@ -1,20 +1,9 @@
-import { XhsImageResult } from '../../integrations/xhs-parser/xhs-parser.types';
+import { RemoteWatermarkData } from '../../integrations/watermark-parser/watermark-parser.types';
 import { GenerateQuota } from '../generate/types/generate.types';
 
 export interface WatermarkParseResponse {
-  id: string;
-  source: string;
-  sourceUrl: string;
-  finalUrl: string;
-  noteId: string;
-  title: string;
-  content: string;
-  type: string;
-  images: XhsImageResult[];
-  coverUrl?: string;
-  videoUrl: string;
-  musicUrl?: string;
-  status: 'success';
-  createdAt: string;
+  success: true;
+  data: RemoteWatermarkData;
+  request_id: string;
   quota?: GenerateQuota;
 }

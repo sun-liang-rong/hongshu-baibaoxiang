@@ -1,7 +1,7 @@
 export type RuntimeMode = "mock" | "dev" | "prod";
 
 export const runtimeConfig = {
-  mode: "prod" as RuntimeMode,
+  mode: "dev" as RuntimeMode,
   devBaseURL: "http://127.0.0.1:3000/api/v1",
   prodBaseURL: "https://www.hongshu.sale/vw/api/v1",
 };

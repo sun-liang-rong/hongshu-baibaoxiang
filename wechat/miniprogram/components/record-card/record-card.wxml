@@ -1,13 +1,18 @@
 <view class="record-card">
-  <view class="record-card__head">
-    <status-pill text="{{item.label}}"></status-pill>
-    <text class="record-card__time">{{item.time}}</text>
+  <view class="record-card__content" hover-class="record-card__content--pressed" bindtap="open">
+    <view class="record-card__head">
+      <status-pill wx:if="{{item.label}}" text="{{item.label}}"></status-pill>
+      <text class="record-card__time">{{item.time}}</text>
+    </view>
+    <view class="record-card__title">{{item.title}}</view>
+    <view wx:if="{{item.summary}}" class="record-card__summary">{{item.summary}}</view>
+    <view class="record-card__open">
+      {{item.type === 'title' ? '复制标题' : '打开内容'}}
+      <text class="record-card__chevron">›</text>
+    </view>
   </view>
-  <view class="record-card__title" bindtap="open">{{item.title}}</view>
-  <view class="record-card__summary">{{item.summary}}</view>
   <view class="record-card__actions">
-    <button bindtap="open">查看</button>
-    <button bindtap="copy">复制</button>
-    <button class="record-card__remove" bindtap="remove">删除</button>
+    <button wx:if="{{item.type !== 'title'}}" class="record-card__action" hover-class="record-card__action--pressed" aria-label="复制记录内容" bindtap="copy">复制</button>
+    <button class="record-card__action record-card__remove" hover-class="record-card__action--pressed" aria-label="删除记录" bindtap="remove">删除</button>
   </view>
 </view>

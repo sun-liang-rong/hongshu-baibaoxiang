@@ -1,6 +1,14 @@
 import { check, toggle } from '../../services/favorites';
-import { titles } from '../../services/generate';
+import { getGenerateQuota, titles } from '../../services/generate';
+import { GenerateQuota } from '../../types/domain';
 import { getStorage, removeStorage } from '../../utils/storage';
+import {
+  buildCreatorShareTitle,
+  buildSharePath,
+  buildShareQuery,
+  decodeShareParam,
+  enableShareMenu,
+} from '../../utils/share';
 import { syncTabBar } from '../../utils/tabbar';
 import { copyText, showToast } from '../../utils/ui';
 
@@ -23,10 +31,21 @@ Component({
     generatedTitles: [] as TitleViewItem[],
     recordId: '',
     loading: false,
+    quota: {
+      used: 0,
+      limit: 1,
+      remaining: 1,
+    } as GenerateQuota,
+    quotaReady: false,
+    advancedOpen: false,
+    scrollIntoView: '',
+    requestError: '',
   },
   pageLifetimes: {
     show() {
       syncTabBar(this, 1);
+      enableShareMenu();
+      this.loadQuota();
       const seed = getStorage<string>('hshu_title_seed', '');
       if (seed) {
         this.setData({ topic: seed });
@@ -40,11 +59,36 @@ Component({
       const current = pages[pages.length - 1];
       const options = ((current && current.options) || {}) as { topic?: string };
       if (options.topic) {
-        this.setData({ topic: decodeURIComponent(options.topic) });
+        this.setData({ topic: decodeShareParam(options.topic) });
       }
     },
   },
   methods: {
+    onShareAppMessage() {
+      const topic = this.data.topic.trim();
+      return {
+        title: buildCreatorShareTitle(topic, '标题'),
+        path: buildSharePath('/pages/title-generate/title-generate', {
+          topic,
+          from: 'share',
+        }),
+      };
+    },
+    onShareTimeline() {
+      const topic = this.data.topic.trim();
+      return {
+        title: buildCreatorShareTitle(topic, '标题'),
+        query: buildShareQuery({ topic, from: 'timeline' }),
+      };
+    },
+    async loadQuota() {
+      try {
+        const quota = await getGenerateQuota();
+        this.setData({ quota: quota.title, quotaReady: true });
+      } catch {
+        this.setData({ quotaReady: false });
+      }
+    },
     onTopicInput(e: WechatMiniprogram.Input) {
       this.setData({ topic: e.detail.value });
     },
@@ -57,17 +101,29 @@ Component({
     onStyleChange(e: WechatMiniprogram.PickerChange) {
       this.setData({ styleIndex: Number(e.detail.value) });
     },
-    onCountChange(e: WechatMiniprogram.PickerChange) {
-      this.setData({ countIndex: Number(e.detail.value) });
+    selectCount(e: WechatMiniprogram.TouchEvent) {
+      this.setData({ countIndex: Number(e.currentTarget.dataset.index) });
+    },
+    toggleAdvanced() {
+      this.setData({ advancedOpen: !this.data.advancedOpen });
     },
     async generate() {
+      if (this.data.loading) {
+        return;
+      }
+
+      if (this.data.quotaReady && this.data.quota.remaining <= 0) {
+        showToast('今日标题生成次数已用完，明天再来试试');
+        return;
+      }
+
       const topic = this.data.topic.trim();
       if (!topic) {
         showToast('请输入要生成标题的主题');
         return;
       }
 
-      this.setData({ loading: true });
+      this.setData({ loading: true, requestError: '' });
       try {
         const result = await titles({
           topic,
@@ -81,13 +137,26 @@ Component({
           refId: this.createTitleRefId(result.recordId, title),
           favorited: false,
         }));
-        this.setData({
-          generatedTitles,
-          recordId: result.recordId,
-        });
+        this.setData(
+          {
+            generatedTitles,
+            recordId: result.recordId,
+            ...(result.quota
+              ? { quota: result.quota, quotaReady: true }
+              : {}),
+            scrollIntoView: '',
+          },
+          () => this.revealResult(),
+        );
+        if (!result.quota) {
+          this.loadQuota();
+        }
         this.syncFavoriteStatus();
       } catch (error) {
         const message = error instanceof Error ? error.message : '生成失败，请稍后重试';
+        this.setData({
+          requestError: this.isRetryableError(message) ? message : '',
+        });
         showToast(message);
       } finally {
         this.setData({ loading: false });
@@ -95,6 +164,18 @@ Component({
     },
     copy(e: WechatMiniprogram.TouchEvent) {
       copyText(e.currentTarget.dataset.title as string, '标题已复制');
+    },
+    retryRequest() {
+      this.generate();
+    },
+    isRetryableError(message: string) {
+      return /网络|超时|请求失败|暂不可用|稍后重试/.test(message);
+    },
+    copyAll() {
+      const titles = this.data.generatedTitles.map(
+        (item, index) => `${index + 1}. ${item.text}`,
+      );
+      copyText(titles.join('\n'), '全部标题已复制');
     },
     async favorite(e: WechatMiniprogram.TouchEvent) {
       const refId = e.currentTarget.dataset.refId as string;
@@ -128,6 +209,11 @@ Component({
     },
     createTitleRefId(recordId: string, title: string) {
       return `${recordId}_${title}`;
+    },
+    revealResult() {
+      wx.nextTick(() => {
+        this.setData({ scrollIntoView: 'title-result' });
+      });
     },
   },
 });

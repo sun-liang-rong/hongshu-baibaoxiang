@@ -3,6 +3,8 @@
     wx:for="{{filters}}"
     wx:key="label"
     class="filter {{active === item.value ? 'filter--active' : ''}}"
+    aria-role="button"
+    aria-label="筛选{{item.label}}记录"
     bindtap="change"
     data-value="{{item.value}}"
   >

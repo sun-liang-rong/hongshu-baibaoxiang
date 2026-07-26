@@ -15,7 +15,6 @@ import { FavoriteModule } from './modules/favorite/favorite.module';
 import { SystemConfigModule } from './modules/system-config/system-config.module';
 import { StatsModule } from './modules/stats/stats.module';
 import { WechatIntegrationModule } from './integrations/wechat/wechat-integration.module';
-import { XhsParserIntegrationModule } from './integrations/xhs-parser/xhs-parser-integration.module';
 import { AiProviderIntegrationModule } from './integrations/ai-provider/ai-provider-integration.module';
 
 @Module({
@@ -27,7 +26,6 @@ import { AiProviderIntegrationModule } from './integrations/ai-provider/ai-provi
     }),
     DatabaseModule,
     WechatIntegrationModule,
-    XhsParserIntegrationModule,
     AiProviderIntegrationModule,
     HealthModule,
     AuthModule,

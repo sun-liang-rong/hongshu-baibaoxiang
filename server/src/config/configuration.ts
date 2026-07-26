@@ -11,21 +11,11 @@ export default () => ({
     appId: process.env.WECHAT_APP_ID || '',
     appSecret: process.env.WECHAT_APP_SECRET || '',
   },
-  xhs: {
-    parserBaseUrl: process.env.XHS_PARSER_BASE_URL || '',
-    parserApiKey: process.env.XHS_PARSER_API_KEY || '',
-  },
-  douyin: {
-    renderBrowserExecutablePath:
-      process.env.DOUYIN_RENDER_BROWSER_EXECUTABLE_PATH || '',
-    renderBrowserDisabled:
-      process.env.DOUYIN_RENDER_BROWSER_DISABLED === 'true',
-    renderNavigationTimeoutMs: Number(
-      process.env.DOUYIN_RENDER_NAVIGATION_TIMEOUT_MS || 30000,
-    ),
-    renderSettleTimeoutMs: Number(
-      process.env.DOUYIN_RENDER_SETTLE_TIMEOUT_MS || 8000,
-    ),
+  watermarkParser: {
+    url:
+      process.env.WATERMARK_PARSER_URL ||
+      'http://hongshu.sale:5555/api/v1/parse',
+    timeoutMs: Number(process.env.WATERMARK_PARSER_TIMEOUT_MS || 30000),
   },
   ai: {
     provider: process.env.AI_PROVIDER || 'starapi',
@@ -35,11 +25,11 @@ export default () => ({
   },
   generate: {
     watermarkDailyLimit: Number(
-      process.env.GENERATE_WATERMARK_DAILY_LIMIT || 20,
+      process.env.GENERATE_WATERMARK_DAILY_LIMIT || 1,
     ),
-    titleDailyLimit: Number(process.env.GENERATE_TITLE_DAILY_LIMIT || 10),
+    titleDailyLimit: Number(process.env.GENERATE_TITLE_DAILY_LIMIT || 1),
     copywritingDailyLimit: Number(
-      process.env.GENERATE_COPYWRITING_DAILY_LIMIT || 5,
+      process.env.GENERATE_COPYWRITING_DAILY_LIMIT || 1,
     ),
   },
 });

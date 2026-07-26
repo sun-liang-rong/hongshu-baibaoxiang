@@ -1,0 +1,43 @@
+.network-banner {
+  display: flex;
+  min-height: 72rpx;
+  flex: none;
+  align-items: center;
+  gap: 12rpx;
+  padding: 10rpx 24rpx;
+  border-top: 1rpx solid #ffe1b3;
+  border-bottom: 1rpx solid #ffe1b3;
+  background: #fff8e8;
+  color: #8c5b13;
+}
+
+.network-banner__dot {
+  width: 14rpx;
+  height: 14rpx;
+  flex: none;
+  border-radius: 50%;
+  background: #df8a16;
+}
+
+.network-banner__text {
+  min-width: 0;
+  flex: 1;
+  font-size: 24rpx;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.network-banner__retry {
+  display: flex;
+  min-height: 56rpx;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  padding: 0 14rpx;
+  border-radius: 9rpx;
+  background: #fff0cd;
+  color: #8c5b13;
+  font-size: 23rpx;
+  font-weight: 800;
+  line-height: 1.35;
+}

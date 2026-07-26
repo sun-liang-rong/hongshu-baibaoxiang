@@ -23,19 +23,19 @@
     "list": [
       {
         "pagePath": "pages/watermark/watermark",
-        "text": "水印",
+        "text": "去水印",
         "iconPath": "assets/tabbar/watermark.png",
         "selectedIconPath": "assets/tabbar/watermark-active.png"
       },
       {
         "pagePath": "pages/title-generate/title-generate",
-        "text": "标题",
+        "text": "写标题",
         "iconPath": "assets/tabbar/title.png",
         "selectedIconPath": "assets/tabbar/title-active.png"
       },
       {
         "pagePath": "pages/copywriting-generate/copywriting-generate",
-        "text": "文案",
+        "text": "写文案",
         "iconPath": "assets/tabbar/copywriting.png",
         "selectedIconPath": "assets/tabbar/copywriting-active.png"
       },

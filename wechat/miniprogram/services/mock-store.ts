@@ -2,6 +2,7 @@ import {
   CopywritingResult,
   FavoriteItem,
   FavoritePayload,
+  GenerateQuota,
   HistoryItem,
   PaginatedResult,
   RecordType,
@@ -11,10 +12,34 @@ import { getStorage, setStorage } from '../utils/storage';
 
 const HISTORY_KEY = 'hshu_history';
 const FAVORITES_KEY = 'hshu_favorites';
+const QUOTA_KEY = 'hshu_mock_daily_quota';
+const DAILY_LIMIT = 1;
+
+interface MockQuotaState {
+  date: string;
+  usage: Record<RecordType, number>;
+}
 
 const uid = (prefix: string) => `${prefix}_${Date.now()}_${Math.random().toString(16).slice(2, 8)}`;
 
 export const nowIso = () => new Date().toISOString();
+
+export const getMockQuota = (type: RecordType): GenerateQuota => {
+  const state = getMockQuotaState();
+  const used = Math.min(state.usage[type], DAILY_LIMIT);
+  return {
+    used,
+    limit: DAILY_LIMIT,
+    remaining: Math.max(DAILY_LIMIT - used, 0),
+  };
+};
+
+export const consumeMockQuota = (type: RecordType): GenerateQuota => {
+  const state = getMockQuotaState();
+  state.usage[type] = Math.min(state.usage[type] + 1, DAILY_LIMIT);
+  setStorage(QUOTA_KEY, state);
+  return getMockQuota(type);
+};
 
 export const listHistory = (type?: RecordType) => {
   const list = getStorage<HistoryItem[]>(HISTORY_KEY, []);
@@ -101,23 +126,41 @@ export const isFavorited = (type: RecordType, refId: string) =>
 export const createWatermarkResult = (text: string): WatermarkResult => {
   const id = uid('wm');
   return {
-    id,
-    source: 'xhs',
-    sourceUrl: text,
-    finalUrl: text,
-    noteId: id,
-    title: '红薯热门笔记素材示例',
-    content: '这是一段 mock 原文案。真实接口接入后，这里会展示笔记正文，用户可以一键复制用于学习整理。',
-    type: 'image',
-    images: [
-      'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=900&q=80',
-      'https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=900&q=80',
-    ],
-    coverUrl: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=900&q=80',
-    videoUrl: '',
-    musicUrl: '',
-    status: 'success',
-    createdAt: nowIso(),
+    success: true,
+    data: {
+      platform: 'xiaohongshu',
+      type: 'image',
+      id,
+      title: '红薯热门笔记素材示例',
+      description: '这是一段 mock 原文案。真实接口接入后，这里会展示笔记正文，用户可以一键复制用于学习整理。',
+      author: {
+        id: 'mock-author',
+        nickname: '素材作者',
+        avatar_url: '',
+      },
+      cover_url: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=900&q=80',
+      video: null,
+      parts: [],
+      images: [
+        {
+          url: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=900&q=80',
+        },
+        {
+          url: 'https://images.unsplash.com/photo-1496747611176-843222e1e57c?auto=format&fit=crop&w=900&q=80',
+        },
+      ],
+      music: null,
+      statistics: {
+        likes: 1280,
+        comments: 86,
+        shares: 42,
+        favorites: 315,
+      },
+      published_at: nowIso(),
+      original_url: text,
+      expires_at: '',
+    },
+    request_id: id,
   };
 };
 
@@ -151,4 +194,26 @@ const paginate = <T extends { id: string }>(
     nextCursor: hasMore ? pageItems[pageItems.length - 1]?.id || '' : '',
     pageSize,
   };
+};
+
+const getMockQuotaState = (): MockQuotaState => {
+  const date = getChinaDateKey();
+  const stored = getStorage<MockQuotaState | null>(QUOTA_KEY, null);
+  if (stored?.date === date) {
+    return stored;
+  }
+
+  return {
+    date,
+    usage: {
+      watermark: 0,
+      title: 0,
+      copywriting: 0,
+    },
+  };
+};
+
+const getChinaDateKey = () => {
+  const chinaTime = new Date(Date.now() + 8 * 60 * 60 * 1000);
+  return chinaTime.toISOString().slice(0, 10);
 };

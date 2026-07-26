@@ -260,18 +260,25 @@ export class GenerateService {
       };
     }
 
-    const [start, end] = this.getTodayRange();
-    const used = await this.prisma.generateRecord.count({
-      where: {
-        openid,
-        type,
-        status: GenerateStatus.success,
-        createdAt: {
-          gte: start,
-          lt: end,
+    let used = 0;
+    try {
+      const [start, end] = this.getTodayRange();
+      used = await this.prisma.generateRecord.count({
+        where: {
+          openid,
+          type,
+          status: GenerateStatus.success,
+          createdAt: {
+            gte: start,
+            lt: end,
+          },
         },
-      },
-    });
+      });
+    } catch (error) {
+      this.logger.warn(
+        `${this.getTypeLabel(type)}额度查询失败，临时按未使用处理：${this.toErrorMessage(error)}`,
+      );
+    }
 
     return {
       used,
@@ -282,17 +289,17 @@ export class GenerateService {
 
   private getDailyLimit(type: GenerateType) {
     if (type === GenerateType.watermark) {
-      return this.configService.get<number>('generate.watermarkDailyLimit', 20);
+      return this.configService.get<number>('generate.watermarkDailyLimit', 1);
     }
 
     if (type === GenerateType.copywriting) {
       return this.configService.get<number>(
         'generate.copywritingDailyLimit',
-        5,
+        1,
       );
     }
 
-    return this.configService.get<number>('generate.titleDailyLimit', 10);
+    return this.configService.get<number>('generate.titleDailyLimit', 1);
   }
 
   private getTodayRange() {

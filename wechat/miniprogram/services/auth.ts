@@ -33,6 +33,7 @@ const requestOpenid = (code: string): Promise<WechatLoginResponse> =>
       header: {
         'content-type': 'application/json',
       },
+      timeout: 15000,
       success: (res) => {
         const body = res.data;
         if (body && body.code === 0 && body.data?.openid) {
@@ -42,7 +43,14 @@ const requestOpenid = (code: string): Promise<WechatLoginResponse> =>
 
         reject(new Error(body?.message || 'openid 获取失败'));
       },
-      fail: () => reject(new Error('网络异常，请检查网络后重试')),
+      fail: (error) =>
+        reject(
+          new Error(
+            /timeout/i.test(error.errMsg || '')
+              ? '登录请求超时，请重新尝试'
+              : '网络不可用，请恢复网络后重试',
+          ),
+        ),
     });
   });
 

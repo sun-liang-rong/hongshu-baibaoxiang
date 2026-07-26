@@ -1,89 +1,143 @@
-<navigation-bar title="文案生成" back="{{false}}" color="#25232a" background="transparent"></navigation-bar>
-<scroll-view class="page-scroll" scroll-y type="list">
+<navigation-bar title="写文案" back="{{false}}" color="#ffffff" background="#ff2442"></navigation-bar>
+<network-status></network-status>
+<scroll-view
+  class="page-scroll"
+  scroll-y
+  scroll-with-animation
+  scroll-into-view="{{scrollIntoView}}"
+  type="list"
+>
   <view class="page-wrap">
-    <view class="page-head">
-      <view class="page-kicker">笔记文案</view>
-      <view class="page-title">生成更自然的种草笔记</view>
-      <view class="page-subtitle">围绕主题、卖点和人群，组织标题、正文、话题和配图建议。</view>
+    <view class="tool-intro">
+      <view class="tool-intro__main">
+        <view class="tool-title">这篇笔记想写什么？</view>
+        <view class="tool-subtitle">输入一个主题，直接生成完整文案</view>
+      </view>
+      <view wx:if="{{quotaReady}}" class="quota-text {{quota.remaining <= 0 ? 'quota-text--empty' : ''}}">
+        今日 {{quota.remaining}} 次
+      </view>
     </view>
     <view class="form-card">
-      <view class="form-head">
+      <view class="field">
+        <input class="input topic-input" value="{{topic}}" placeholder="例如：夏季通勤穿搭" data-field="topic" bindinput="onInput" />
+      </view>
+      <view
+        class="advanced-toggle"
+        hover-class="advanced-toggle--pressed"
+        aria-role="button"
+        aria-label="{{advancedOpen ? '收起更多设置' : '展开更多设置'}}"
+        bindtap="toggleAdvanced"
+      >
         <view>
-          <view class="panel-title">创作配置</view>
-          <view class="panel-subtitle">把产品信息拆成几个轻量模块，生成时更稳定。</view>
+          <view class="advanced-toggle__title">更多设置</view>
+          <view class="advanced-toggle__desc">{{styles[styleIndex]}} · {{lengths[lengthIndex]}} · {{includeTags ? '带话题' : '无话题'}}</view>
         </view>
-        <view class="panel-badge">Note</view>
+        <text class="advanced-toggle__action">{{advancedOpen ? '收起' : '调整'}}</text>
       </view>
-      <view class="field">
-        <view class="field__label">文案主题</view>
-        <view class="field__hint">一句话说明这篇笔记想讲什么。</view>
-        <input class="input" value="{{topic}}" placeholder="例如：夏季通勤穿搭" data-field="topic" bindinput="onInput" />
-      </view>
-      <view class="field">
-        <view class="field__label">产品或服务</view>
-        <input class="input" value="{{productName}}" placeholder="选填" data-field="productName" bindinput="onInput" />
-      </view>
-      <view class="field">
-        <view class="field__label">核心卖点</view>
-        <textarea class="textarea" value="{{sellingPoints}}" placeholder="选填，例如：省时间、显瘦、适合新手" data-field="sellingPoints" bindinput="onInput" />
-      </view>
-      <view class="field">
-        <view class="field__label">目标人群</view>
-        <input class="input" value="{{audience}}" placeholder="选填，例如：上班族、新手妈妈" data-field="audience" bindinput="onInput" />
-      </view>
-      <view class="picker-grid">
-        <picker mode="selector" range="{{styles}}" value="{{styleIndex}}" bindchange="onStyleChange">
-          <view class="picker-box">
-            <view>
-              <text class="picker-box__label">文案风格</text>
-              <text class="picker-box__value">{{styles[styleIndex]}}</text>
+      <view wx:if="{{advancedOpen}}" class="advanced-fields">
+        <view class="field">
+          <view class="field__label">产品或服务</view>
+          <input class="input" value="{{productName}}" placeholder="例如：轻薄防晒衣" data-field="productName" bindinput="onInput" />
+        </view>
+        <view class="field">
+          <view class="field__label">核心卖点</view>
+          <textarea class="textarea" value="{{sellingPoints}}" placeholder="例如：省时间、显瘦、适合新手" data-field="sellingPoints" bindinput="onInput" />
+        </view>
+        <view class="field">
+          <view class="field__label">目标人群</view>
+          <input class="input" value="{{audience}}" placeholder="例如：上班族、新手妈妈" data-field="audience" bindinput="onInput" />
+        </view>
+        <view class="picker-grid">
+          <picker mode="selector" range="{{styles}}" value="{{styleIndex}}" bindchange="onStyleChange">
+            <view class="picker-box">
+              <view>
+                <text class="picker-box__label">文案风格</text>
+                <text class="picker-box__value">{{styles[styleIndex]}}</text>
+              </view>
+              <text class="picker-box__chevron">⌄</text>
             </view>
-            <text class="picker-box__chevron">⌄</text>
-          </view>
-        </picker>
-        <picker mode="selector" range="{{lengths}}" value="{{lengthIndex}}" bindchange="onLengthChange">
-          <view class="picker-box">
-            <view>
-              <text class="picker-box__label">文案长度</text>
-              <text class="picker-box__value">{{lengths[lengthIndex]}}</text>
+          </picker>
+          <picker mode="selector" range="{{lengths}}" value="{{lengthIndex}}" bindchange="onLengthChange">
+            <view class="picker-box">
+              <view>
+                <text class="picker-box__label">文案长度</text>
+                <text class="picker-box__value">{{lengths[lengthIndex]}}</text>
+              </view>
+              <text class="picker-box__chevron">⌄</text>
             </view>
-            <text class="picker-box__chevron">⌄</text>
-          </view>
-        </picker>
+          </picker>
+        </view>
+        <view class="switch-row">
+          <text>生成话题标签</text>
+          <switch checked="{{includeTags}}" color="#ff2442" bindchange="onIncludeTagsChange" />
+        </view>
       </view>
-      <view class="switch-row">
-        <text>生成话题标签</text>
-        <switch checked="{{includeTags}}" color="#ff2442" bindchange="onIncludeTagsChange" />
+      <view
+        wx:if="{{quotaReady && quota.remaining <= 0}}"
+        class="quota-tip"
+        aria-label="今日生成次数已用完，明日可再生成"
+      >
+        <view class="quota-tip__icon">i</view>
+        <text>今日生成次数已用完，明日可再生成</text>
       </view>
-      <button class="button button--primary cta-button" loading="{{loading}}" bindtap="generate">生成文案</button>
+      <button
+        wx:else
+        class="button button--primary cta-button {{loading ? 'button--loading' : ''}}"
+        loading="{{loading}}"
+        disabled="{{loading}}"
+        bindtap="generate"
+      >
+        生成文案
+      </button>
+      <view wx:if="{{requestError}}" class="request-error" aria-role="alert">
+        <view class="request-error__main">
+          <view class="request-error__title">文案生成没有完成</view>
+          <view class="request-error__desc">{{requestError}}，输入内容已保留</view>
+        </view>
+        <button class="request-error__retry" bindtap="retryRequest">重新尝试</button>
+      </view>
     </view>
 
-    <view class="result-section">
+    <view wx:if="{{result}}" id="copy-result" class="result-section">
       <view class="result-head">
         <view>
           <view class="section-title">文案工作区</view>
           <view class="section-subtitle">生成后可以复制全文，也可以收藏留作素材库。</view>
         </view>
       </view>
-      <block wx:if="{{result}}">
-        <view class="result-title">{{result.title}}</view>
-        <view class="content-box">{{result.body}}</view>
-        <view class="tag-wrap">
-          <view wx:for="{{result.tags}}" wx:key="*this" class="tag">#{{item}}</view>
-        </view>
-        <view class="suggestions">
-          <view class="suggestions__title">配图建议</view>
-          <view wx:for="{{result.imageSuggestions}}" wx:key="*this" class="suggestions__item">{{item}}</view>
-        </view>
-        <view class="action-grid">
-          <button class="button button--primary" bindtap="copyAll">复制全文</button>
-          <button class="button button--ghost {{favorited ? 'button--favorited' : ''}}" bindtap="favorite">
-            {{favorited ? '已收藏' : '收藏'}}
-          </button>
-          <button class="button button--ghost action-grid__wide" loading="{{loading}}" bindtap="generate">重新生成</button>
-        </view>
-      </block>
-      <empty-state wx:else title="还没有生成文案" desc="补充主题、卖点和风格后生成完整红薯文案"></empty-state>
+      <view class="result-title">{{result.title}}</view>
+      <view class="content-box">{{result.body}}</view>
+      <view wx:if="{{result.tags.length}}" class="tag-wrap">
+        <view wx:for="{{result.tags}}" wx:key="*this" class="tag">#{{item}}</view>
+      </view>
+      <view wx:if="{{result.imageSuggestions.length}}" class="suggestions">
+        <view class="suggestions__title">配图建议</view>
+        <view wx:for="{{result.imageSuggestions}}" wx:key="*this" class="suggestions__item">{{item}}</view>
+      </view>
+      <view
+        wx:if="{{quotaReady && quota.remaining <= 0}}"
+        class="quota-tip"
+        aria-label="今日生成次数已用完，明日可再生成"
+      >
+        <view class="quota-tip__icon">i</view>
+        <text>今日生成次数已用完，明日可再生成</text>
+      </view>
+      <button
+        wx:else
+        class="button button--ghost refresh-button {{loading ? 'button--loading' : ''}}"
+        loading="{{loading}}"
+        disabled="{{loading}}"
+        bindtap="generate"
+      >
+        重新生成
+      </button>
+      <view class="result-dock">
+        <button class="button button--primary" bindtap="copyAll">复制全文</button>
+        <button class="button button--ghost {{favorited ? 'button--favorited' : ''}}" bindtap="favorite">
+          {{favorited ? '已收藏' : '收藏'}}
+        </button>
+        <button class="button button--ghost" open-type="share">分享主题</button>
+      </view>
     </view>
   </view>
 </scroll-view>

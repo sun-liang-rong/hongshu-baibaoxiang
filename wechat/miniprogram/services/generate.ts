@@ -1,6 +1,11 @@
 import { isMockMode } from '../config/env';
-import { CopywritingResult, GenerateQuotaResult } from '../types/domain';
-import { addHistory, createCopywritingResult } from './mock-store';
+import { CopywritingResult, GenerateQuota, GenerateQuotaResult } from '../types/domain';
+import {
+  addHistory,
+  consumeMockQuota,
+  createCopywritingResult,
+  getMockQuota,
+} from './mock-store';
 import { request } from './request';
 
 interface TitleInput {
@@ -22,6 +27,12 @@ interface CopywritingInput {
   includeTags?: boolean;
 }
 
+interface TitleGenerateResult {
+  recordId: string;
+  titles: string[];
+  quota?: GenerateQuota;
+}
+
 const titleTemplates = [
   '{topic}新手一定要知道的5个细节',
   '我终于把{topic}讲明白了',
@@ -37,8 +48,12 @@ const titleTemplates = [
   '低成本做好{topic}，关键在这几步',
 ];
 
-export const titles = (input: TitleInput): Promise<{ recordId: string; titles: string[] }> => {
+export const titles = (input: TitleInput): Promise<TitleGenerateResult> => {
   if (isMockMode()) {
+    if (getMockQuota('title').remaining <= 0) {
+      return Promise.reject(new Error('今日标题生成次数已用完，明天再来试试'));
+    }
+
     const count = Math.max(1, Math.min(input.count || 10, 20));
     const generated = titleTemplates.slice(0, count).map((item) => {
       const suffix = input.style ? `｜${input.style}` : '';
@@ -54,10 +69,14 @@ export const titles = (input: TitleInput): Promise<{ recordId: string; titles: s
       payload: { titles: generated },
     });
 
-    return Promise.resolve({ recordId, titles: generated });
+    return Promise.resolve({
+      recordId,
+      titles: generated,
+      quota: consumeMockQuota('title'),
+    });
   }
 
-  return request<{ recordId: string; titles: string[] }>({
+  return request<TitleGenerateResult>({
     url: '/generate/titles',
     method: 'POST',
     data: input,
@@ -68,6 +87,10 @@ export const titles = (input: TitleInput): Promise<{ recordId: string; titles: s
 
 export const copywriting = (input: CopywritingInput): Promise<CopywritingResult> => {
   if (isMockMode()) {
+    if (getMockQuota('copywriting').remaining <= 0) {
+      return Promise.reject(new Error('今日文案生成次数已用完，明天再来试试'));
+    }
+
     const result = createCopywritingResult(input.topic, input.style, input.length);
     addHistory({
       id: result.recordId,
@@ -77,7 +100,10 @@ export const copywriting = (input: CopywritingInput): Promise<CopywritingResult>
       payload: result,
     });
 
-    return Promise.resolve(result);
+    return Promise.resolve({
+      ...result,
+      quota: consumeMockQuota('copywriting'),
+    });
   }
 
   return request<CopywritingResult>({
@@ -92,9 +118,9 @@ export const copywriting = (input: CopywritingInput): Promise<CopywritingResult>
 export const getGenerateQuota = (): Promise<GenerateQuotaResult> => {
   if (isMockMode()) {
     return Promise.resolve({
-      watermark: { used: 0, limit: 20, remaining: 20 },
-      title: { used: 0, limit: 10, remaining: 10 },
-      copywriting: { used: 0, limit: 5, remaining: 5 },
+      watermark: getMockQuota('watermark'),
+      title: getMockQuota('title'),
+      copywriting: getMockQuota('copywriting'),
     });
   }
 
