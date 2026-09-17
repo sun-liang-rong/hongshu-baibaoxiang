@@ -2,6 +2,9 @@ export default () => ({
   app: {
     env: process.env.NODE_ENV || 'development',
     port: Number(process.env.PORT || 3000),
+    // 小程序可访问的本服务对外基地址，用于重写相对 download_url
+    publicBaseUrl:
+      process.env.APP_PUBLIC_BASE_URL || 'https://www.hongshu.sale/vw/api/v1',
   },
   jwt: {
     secret: process.env.JWT_SECRET || 'change-me-in-production',

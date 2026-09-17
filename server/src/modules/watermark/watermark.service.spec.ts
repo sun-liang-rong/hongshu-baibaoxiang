@@ -77,8 +77,33 @@ describe('WatermarkService', () => {
     const result = await service.parse({ text: 'B站分享文本' });
 
     expect(watermarkParser.parse).toHaveBeenCalledWith('B站分享文本');
+    // 相对路径 download_url 应被重写为下载代理绝对地址
+    expect(result.data.video?.download_url).toBe(
+      'https://www.hongshu.sale/vw/api/v1/download?token=demo',
+    );
+    expect(result.data.parts?.[0]?.video?.download_url).toBe(
+      'https://www.hongshu.sale/vw/api/v1/download?token=part',
+    );
     expect(result).toEqual({
       ...remoteResponse,
+      data: {
+        ...remoteResponse.data,
+        video: {
+          ...remoteResponse.data.video,
+          download_url:
+            'https://www.hongshu.sale/vw/api/v1/download?token=demo',
+        },
+        parts: [
+          {
+            ...remoteResponse.data.parts[0],
+            video: {
+              ...remoteResponse.data.parts[0].video,
+              download_url:
+                'https://www.hongshu.sale/vw/api/v1/download?token=part',
+            },
+          },
+        ],
+      },
       quota: {
         used: 0,
         limit: 1,

@@ -68,7 +68,10 @@ export class WatermarkService {
 
     try {
       const remoteResult = await this.watermarkParser.parse(dto.text);
-      const result: WatermarkParseResponse = { ...remoteResult };
+      const result: WatermarkParseResponse = {
+        ...remoteResult,
+        data: this.rewriteDownloadUrls(remoteResult.data),
+      };
       const source = result.data.platform || dto.source || 'unknown';
 
       const saved = await this.saveHistorySafely(
@@ -84,6 +87,76 @@ export class WatermarkService {
       const message = error instanceof Error ? error.message : '解析失败';
       throw new BadRequestException(message);
     }
+  }
+
+  /**
+   * 上游返回的 download_url 可能是相对路径（如 /api/v1/download?token=xxx），
+   * 小程序无法直接访问内网/端口服务，统一重写为本服务的下载代理绝对地址。
+   * 上游路径携带的 /api/v1 前缀对应其全局路由前缀，与 publicBaseUrl 中的
+   * /vw/api/v1 语义重复，需剥掉避免拼出 /api/v1/api/v1/。
+   */
+  private rewriteDownloadUrls<T extends WatermarkParseResponse['data']>(
+    data: T,
+  ): T {
+    const toAbsolute = (downloadUrl?: string): string | undefined => {
+      if (!downloadUrl) {
+        return downloadUrl;
+      }
+      if (/^https?:\/\//i.test(downloadUrl)) {
+        return downloadUrl;
+      }
+      const path = downloadUrl.startsWith('/') ? downloadUrl : `/${downloadUrl}`;
+      const normalized = path.replace(/^\/api\/v1(?=\/)/, '');
+      return `${this.publicBaseUrl}${normalized}`;
+    };
+
+    const next: T = { ...data };
+
+    if (next.video?.download_url) {
+      next.video = {
+        ...next.video,
+        download_url: toAbsolute(next.video.download_url)!,
+      };
+    }
+
+    if (Array.isArray(next.parts)) {
+      next.parts = next.parts.map((part) =>
+        part?.video?.download_url
+          ? {
+              ...part,
+              video: {
+                ...part.video,
+                download_url: toAbsolute(part.video.download_url)!,
+              },
+            }
+          : part,
+      );
+    }
+
+    if (Array.isArray(next.images)) {
+      next.images = next.images.map((image) => {
+        if (typeof image === 'string') {
+          return image;
+        }
+        const raw = (image as { download_url?: unknown })?.download_url;
+        return typeof raw === 'string' && raw
+          ? {
+              ...image,
+              download_url: toAbsolute(raw),
+            }
+          : image;
+      });
+    }
+
+    return next;
+  }
+
+  /** 小程序可访问的本服务对外基地址（需 HTTPS 域名）。 */
+  private get publicBaseUrl(): string {
+    return (
+      this.configService?.get<string>('app.publicBaseUrl') ||
+      'https://www.hongshu.sale/vw/api/v1'
+    );
   }
 
   private async saveHistorySafely(

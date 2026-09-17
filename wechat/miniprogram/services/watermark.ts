@@ -86,9 +86,34 @@ export const getWatermarkTitle = (result: WatermarkResult) =>
   [result.data.platform, result.data.id].filter(Boolean).join(" ") ||
   "解析结果";
 
+const ABSOLUTE_URL_PATTERN = /^https?:\/\//i;
+
+// download_url 是可直接保存的地址（可能为相对路径），仅返回绝对地址，否则回退 url。
+export const getDownloadableVideoUrl = (video: {
+  url: string;
+  download_url: string;
+}) =>
+  video.download_url && ABSOLUTE_URL_PATTERN.test(video.download_url)
+    ? video.download_url
+    : video.url;
+
 export const getWatermarkImageUrls = (result: WatermarkResult) =>
   result.data.images
     .map((image) => (typeof image === "string" ? image : image.url || ""))
+    .filter(Boolean);
+
+export const getWatermarkDownloadImageUrls = (result: WatermarkResult) =>
+  result.data.images
+    .map((image) => {
+      if (typeof image === "string") {
+        return image;
+      }
+      const download = image.download_url || "";
+      if (download && ABSOLUTE_URL_PATTERN.test(download)) {
+        return download;
+      }
+      return image.url || "";
+    })
     .filter(Boolean);
 
 export const parse = (input: { text: string }): Promise<WatermarkResult> => {

@@ -1,6 +1,8 @@
 import { check, toggle } from "../../services/favorites";
 import {
+  getDownloadableVideoUrl,
   getWatermarkDescription,
+  getWatermarkDownloadImageUrls,
   getWatermarkImageUrls,
   getWatermarkRefId,
   getWatermarkTitle,
@@ -19,7 +21,10 @@ import { copyText, showToast } from "../../utils/ui";
 interface ResultData {
   result: WatermarkResult | null;
   imageUrls: string[];
+  downloadImageUrls: string[];
+  downloadUrlsByDisplay: Record<string, string>;
   activeVideo: WatermarkVideo | null;
+  activeVideoDownloadUrl: string;
   activePartIndex: number;
   platformLabel: string;
   platformInitial: string;
@@ -43,7 +48,10 @@ Component({
   data: {
     result: null,
     imageUrls: [],
+    downloadImageUrls: [],
+    downloadUrlsByDisplay: {},
     activeVideo: null,
+    activeVideoDownloadUrl: "",
     activePartIndex: -1,
     platformLabel: "",
     platformInitial: "",
@@ -77,11 +85,23 @@ Component({
         result.data.video ||
         (firstPartIndex >= 0 ? result.data.parts[firstPartIndex].video : null);
       const platformLabel = getPlatformLabel(result.data.platform);
+      const imageUrls = getWatermarkImageUrls(result);
+      const downloadImageUrls = getWatermarkDownloadImageUrls(result);
+      // 展示地址 -> 下载地址映射，展示列表与下载列表一一对应。
+      const downloadUrlsByDisplay: Record<string, string> = {};
+      imageUrls.forEach((displayUrl, index) => {
+        downloadUrlsByDisplay[displayUrl] = downloadImageUrls[index] || displayUrl;
+      });
 
       this.setData({
         result,
-        imageUrls: getWatermarkImageUrls(result),
+        imageUrls,
+        downloadImageUrls,
+        downloadUrlsByDisplay,
         activeVideo,
+        activeVideoDownloadUrl: activeVideo
+          ? getDownloadableVideoUrl(activeVideo)
+          : "",
         activePartIndex,
         platformLabel,
         platformInitial: platformLabel.slice(0, 1),
@@ -126,6 +146,7 @@ Component({
       this.setData({
         activePartIndex: index,
         activeVideo: video,
+        activeVideoDownloadUrl: getDownloadableVideoUrl(video),
         videoMeta: formatVideoMeta(video),
       });
     },
@@ -150,7 +171,12 @@ Component({
       wx.previewImage({ current: url, urls: this.data.imageUrls });
     },
     async saveImage(e: WechatMiniprogram.TouchEvent) {
-      const url = e.currentTarget.dataset.url as string;
+      const displayUrl = e.currentTarget.dataset.url as string;
+      const url =
+        this.data.downloadUrlsByDisplay[displayUrl] || displayUrl || "";
+      if (!url) {
+        return;
+      }
       wx.showLoading({ title: "保存中", mask: true });
       try {
         await this.saveImageToAlbum(url);
@@ -162,7 +188,7 @@ Component({
       }
     },
     async saveAllImages() {
-      const images = this.data.imageUrls;
+      const images = this.data.downloadImageUrls;
       if (!images.length || this.data.savingAll) {
         return;
       }
@@ -260,7 +286,7 @@ Component({
       }
     },
     async saveVideo() {
-      const videoUrl = this.data.activeVideo?.url || "";
+      const videoUrl = this.data.activeVideoDownloadUrl;
       if (!videoUrl) {
         showToast("暂无视频可保存");
         return;

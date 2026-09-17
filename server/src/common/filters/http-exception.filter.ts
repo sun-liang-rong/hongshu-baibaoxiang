@@ -41,9 +41,15 @@ export class HttpExceptionFilter implements ExceptionFilter {
       const responseBody = asRecord(response);
       if (responseBody && 'message' in responseBody) {
         const message = responseBody.message;
-        return Array.isArray(message)
-          ? String(message[0] ?? '')
-          : String(message);
+        // 处理 ValidationPipe 返回的错误数组
+        if (Array.isArray(message)) {
+          return message.join('; ');
+        }
+        // 处理对象类型的message
+        if (typeof message === 'object' && message !== null) {
+          return JSON.stringify(message);
+        }
+        return String(message);
       }
       return exception.message;
     }

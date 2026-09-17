@@ -15,7 +15,10 @@ async function bootstrap() {
     new ValidationPipe({
       whitelist: true,
       transform: true,
-      forbidNonWhitelisted: true,
+      forbidNonWhitelisted: false, // 改为false，允许额外字段（会被自动移除）
+      transformOptions: {
+        enableImplicitConversion: true, // 启用隐式类型转换
+      },
     }),
   );
 
